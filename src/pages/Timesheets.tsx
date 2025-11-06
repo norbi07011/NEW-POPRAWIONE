@@ -95,9 +95,9 @@ function generateWeekDays(startDate: Date): DayHours[] {
     days.push({
       date: currentDay.toISOString().split('T')[0],
       dayName: dayNames[currentDay.getDay()],
-      startTime: '08:00',
+      startTime: '07:00',
       endTime: '16:00',
-      breakMinutes: 30,
+      breakMinutes: 60,
       workedHours: 0,
       notes: ''
     });
@@ -132,7 +132,11 @@ function formatDatePL(dateStr: string): string {
 
 export function Timesheets() {
   const { isMuted } = useAudio();
-  const [timesheets, setTimesheets] = useState<Timesheet[]>([]);
+  const [timesheets, setTimesheets] = useState<Timesheet[]>(() => {
+    // Wczytaj zapisane karty pracy z localStorage przy starcie
+    const saved = localStorage.getItem('timesheets');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [currentSheet, setCurrentSheet] = useState<Timesheet | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   
@@ -355,22 +359,25 @@ export function Timesheets() {
     if (!currentSheet) return;
     
     const existingIndex = timesheets.findIndex(t => t.id === currentSheet.id);
+    let updatedTimesheets: Timesheet[];
     
     if (existingIndex >= 0) {
-      const updated = [...timesheets];
-      updated[existingIndex] = currentSheet;
-      setTimesheets(updated);
+      // Aktualizuj istniejącą kartę
+      updatedTimesheets = [...timesheets];
+      updatedTimesheets[existingIndex] = currentSheet;
     } else {
-      setTimesheets([...timesheets, currentSheet]);
+      // Dodaj nową kartę
+      updatedTimesheets = [...timesheets, currentSheet];
     }
     
+    // Zaktualizuj state
+    setTimesheets(updatedTimesheets);
+    
     // Zapisz do localStorage
-    localStorage.setItem('timesheets', JSON.stringify([...timesheets, currentSheet]));
+    localStorage.setItem('timesheets', JSON.stringify(updatedTimesheets));
     
     alert('✅ Karta pracy zapisana!');
   };
-
-
 
   // ============================================
   // RENDER

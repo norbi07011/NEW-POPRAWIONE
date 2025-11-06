@@ -11,11 +11,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, PencilSimple, Trash, DownloadSimple, Receipt, CreditCard, Camera, Image as ImageIcon, X } from '@phosphor-icons/react';
+import { Plus, PencilSimple, Trash, DownloadSimple, Receipt, CreditCard, Camera, Image as ImageIcon, X, Scan } from '@phosphor-icons/react';
 import { Expense, EXPENSE_CATEGORIES, ExpenseCategory, ExpenseAttachment } from '@/types/expenses';
 import { formatCurrency, formatDate } from '@/lib/invoice-utils';
 import { calculateNetFromGross, calculateGrossFromNet, type VATRate } from '@/lib/vat-calculator';
 import { toast } from 'sonner';
+import { scanReceipt, type ReceiptData } from '@/lib/receiptScanner';
 
 export default function Expenses() {
   const { t, i18n } = useTranslation();
@@ -29,6 +30,11 @@ export default function Expenses() {
   const [attachments, setAttachments] = useState<ExpenseAttachment[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  
+  // OCR scanning state
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const scanInputRef = useRef<HTMLInputElement>(null);
   
   // NOWY STATE: Przełącznik "Kwota zawiera VAT"
   const [amountIncludesVAT, setAmountIncludesVAT] = useState(true); // Domyślnie TRUE (kwota z rachunku)
@@ -197,6 +203,137 @@ export default function Expenses() {
       toast.error('Błąd podczas dodawania załączników');
     }
   };
+
+  // ==================== OCR SCANNING ====================
+  /**
+   * Skanuj paragon ze zdjęcia i automatycznie wypełnij formularz
+   */
+  const handleScanReceipt = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    
+    // Sprawdź typ pliku
+    if (!file.type.startsWith('image/')) {
+      toast.error('Wybierz zdjęcie paragonu (JPG, PNG)');
+      return;
+    }
+
+    setIsScanning(true);
+    setScanProgress(0);
+
+    try {
+      toast.info('📷 Rozpoznawanie tekstu z paragonu...');
+
+      // Wykryj język na podstawie ustawień
+      const language = i18n.language === 'pl' ? 'pol' : i18n.language === 'nl' ? 'nld' : 'eng';
+      
+      // Skanuj paragon z OCR
+      const receiptData: ReceiptData = await scanReceipt(
+        file,
+        language,
+        (progress) => setScanProgress(progress)
+      );
+
+      console.log('📝 Dane z paragonu:', receiptData);
+
+      // Automatyczne wypełnienie formularza
+      if (receiptData.total || receiptData.totalNet) {
+        // Preferuj total (brutto) jeśli dostępne
+        const amount = receiptData.total || receiptData.totalNet || 0;
+        setFormData(prev => ({
+          ...prev,
+          amount_net: amount.toFixed(2),
+        }));
+        
+        // Ustaw przełącznik VAT
+        if (receiptData.total) {
+          setAmountIncludesVAT(true); // Kwota zawiera VAT
+        } else {
+          setAmountIncludesVAT(false); // Kwota netto
+        }
+      }
+
+      if (receiptData.vatRate) {
+        setFormData(prev => ({
+          ...prev,
+          vat_rate: receiptData.vatRate!.toString(),
+        }));
+      }
+
+      if (receiptData.date) {
+        setFormData(prev => ({
+          ...prev,
+          date: receiptData.date!,
+        }));
+      }
+
+      if (receiptData.supplier) {
+        setFormData(prev => ({
+          ...prev,
+          supplier: receiptData.supplier!,
+        }));
+      }
+
+      if (receiptData.invoiceNumber) {
+        setFormData(prev => ({
+          ...prev,
+          invoice_number: receiptData.invoiceNumber!,
+        }));
+      }
+
+      // Dodaj paragon jako załącznik
+      const base64 = await fileToBase64(file);
+      const attachment: ExpenseAttachment = {
+        id: `att_${Date.now()}`,
+        expense_id: editingExpense?.id || '',
+        file_name: file.name,
+        file_path: base64,
+        file_type: 'image',
+        file_size: file.size,
+        sequence_number: attachments.length + 1,
+        created_at: new Date().toISOString(),
+      };
+      
+      setAttachments([...attachments, attachment]);
+
+      // Pokaż wyniki
+      const confidence = receiptData.confidence || 0;
+      const fields = [
+        receiptData.total && `💰 Kwota: ${receiptData.total.toFixed(2)}`,
+        receiptData.date && `📅 Data: ${receiptData.date}`,
+        receiptData.supplier && `🏪 Sklep: ${receiptData.supplier}`,
+        receiptData.vatRate && `📊 VAT: ${receiptData.vatRate}%`,
+      ].filter(Boolean).join('\n');
+
+      if (confidence < 50) {
+        toast.warning(
+          `⚠️ Niska pewność rozpoznania (${confidence.toFixed(0)}%)\n\n${fields}\n\nSprawdź i popraw dane ręcznie.`,
+          { duration: 6000 }
+        );
+      } else {
+        toast.success(
+          `✅ Paragon zeskanowany (pewność ${confidence.toFixed(0)}%)\n\n${fields}`,
+          { duration: 5000 }
+        );
+      }
+
+      // Reset input
+      if (event.target) {
+        event.target.value = '';
+      }
+
+    } catch (error) {
+      console.error('OCR Error:', error);
+      toast.error('Nie udało się odczytać paragonu. Spróbuj zrobić wyraźniejsze zdjęcie.');
+    } finally {
+      setIsScanning(false);
+      setScanProgress(0);
+    }
+  };
+  // ==================== END OCR SCANNING ====================
+
 
   // Usuń załącznik
   const handleRemoveAttachment = (attachmentId: string) => {
@@ -542,6 +679,39 @@ export default function Expenses() {
                         <ImageIcon size={18} />
                         Galeria / Pliki
                       </Button>
+                      
+                      {/* NOWY PRZYCISK: Skanuj Paragon z OCR */}
+                      <Button
+                        type="button"
+                        variant="default"
+                        size="sm"
+                        onClick={() => scanInputRef.current?.click()}
+                        disabled={isScanning}
+                        className="flex items-center gap-2 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                      >
+                        {isScanning ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                            {scanProgress > 0 ? `${scanProgress}%` : 'Skanowanie...'}
+                          </>
+                        ) : (
+                          <>
+                            <Scan size={18} weight="bold" />
+                            Skanuj Paragon OCR
+                          </>
+                        )}
+                      </Button>
+                      
+                      {/* Input dla OCR scanning */}
+                      <input
+                        ref={scanInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleScanReceipt}
+                        className="hidden"
+                        aria-label="Skanuj paragon z OCR"
+                        title="Automatycznie odczytaj dane z paragonu"
+                      />
                       
                       {/* Input dla aparatu (capture="environment" aktywuje tylną kamerę) */}
                       <input
