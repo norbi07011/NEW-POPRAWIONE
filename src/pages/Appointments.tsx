@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, PencilSimple, Trash, Calendar, MagnifyingGlass, Check, X, Clock, MapPin, Bell } from '@phosphor-icons/react';
+import { Plus, PencilSimple, Trash, Calendar, MagnifyingGlass, Check, X, Clock, MapPin, Bell, CaretLeft, CaretRight, List } from '@phosphor-icons/react';
 import { Appointment } from '@/types';
 import { toast } from 'sonner';
 
@@ -23,6 +23,8 @@ export default function Appointments() {
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const [formData, setFormData] = useState({
     title: '',
@@ -193,6 +195,154 @@ export default function Appointments() {
     }).format(d);
   };
 
+  // Funkcje kalendarza
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    
+    return { daysInMonth, startingDayOfWeek, year, month };
+  };
+
+  const getAppointmentsForDate = (date: string) => {
+    return appointments.filter(apt => apt.date === date);
+  };
+
+  const handleDateClick = (date: string) => {
+    setFormData({
+      title: '',
+      client_id: '',
+      date: date,
+      time: '09:00',
+      duration: 60,
+      location: '',
+      description: '',
+      reminder_minutes: 30,
+      status: 'scheduled',
+    });
+    setEditingAppointment(null);
+    setIsDialogOpen(true);
+  };
+
+  const previousMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
+  };
+
+  const nextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
+  };
+
+  const goToToday = () => {
+    setCurrentMonth(new Date());
+  };
+
+  const renderCalendar = () => {
+    const { daysInMonth, startingDayOfWeek, year, month } = getDaysInMonth(currentMonth);
+    const days: React.ReactElement[] = [];
+    const monthNames = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
+    const dayNames = ['Nie', 'Pon', 'Wto', 'Śro', 'Czw', 'Pią', 'Sob'];
+
+    // Puste komórki przed pierwszym dniem miesiąca
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(<div key={`empty-${i}`} className="h-32 bg-gray-50 dark:bg-gray-900"></div>);
+    }
+
+    // Dni miesiąca
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const dayAppointments = getAppointmentsForDate(dateStr);
+      const isToday = dateStr === new Date().toISOString().split('T')[0];
+      
+      days.push(
+        <div
+          key={day}
+          onClick={() => handleDateClick(dateStr)}
+          className={`h-32 border border-gray-200 dark:border-gray-700 p-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors ${
+            isToday ? 'bg-blue-100 dark:bg-blue-900/30 ring-2 ring-blue-500' : 'bg-white dark:bg-gray-800'
+          }`}
+        >
+          <div className={`text-sm font-semibold mb-1 ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
+            {day}
+          </div>
+          <div className="space-y-1 overflow-y-auto max-h-20">
+            {dayAppointments.map((apt, idx) => (
+              <div
+                key={apt.id}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenDialog(apt);
+                }}
+                className={`text-xs p-1 rounded truncate ${
+                  apt.status === 'scheduled' ? 'bg-blue-500 text-white' :
+                  apt.status === 'completed' ? 'bg-green-500 text-white' :
+                  'bg-red-500 text-white'
+                }`}
+                title={`${apt.time} - ${apt.title}`}
+              >
+                {apt.time} {apt.title}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {/* Nawigacja kalendarza */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {monthNames[month]} {year}
+          </h2>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={goToToday}>
+              Dzisiaj
+            </Button>
+            <Button variant="outline" size="sm" onClick={previousMonth}>
+              <CaretLeft className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={nextMonth}>
+              <CaretRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Nagłówki dni tygodnia */}
+        <div className="grid grid-cols-7 gap-0">
+          {dayNames.map(name => (
+            <div key={name} className="text-center font-semibold text-gray-600 dark:text-gray-400 p-2 bg-gray-100 dark:bg-gray-800">
+              {name}
+            </div>
+          ))}
+        </div>
+
+        {/* Dni */}
+        <div className="grid grid-cols-7 gap-0 border border-gray-200 dark:border-gray-700">
+          {days}
+        </div>
+
+        {/* Legenda */}
+        <div className="flex gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-blue-500 rounded"></div>
+            <span>Zaplanowane</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-green-500 rounded"></div>
+            <span>Zakończone</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-red-500 rounded"></div>
+            <span>Anulowane</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -218,16 +368,42 @@ export default function Appointments() {
                 Zarządzaj spotkaniami z klientami i otrzymuj powiadomienia
               </CardDescription>
             </div>
-            <Button onClick={() => handleOpenDialog()}>
-              <Plus className="w-4 h-4 mr-2" />
-              Nowe spotkanie
-            </Button>
+            <div className="flex gap-2">
+              <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'calendar' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('calendar')}
+                  className={viewMode === 'calendar' ? 'bg-blue-500 hover:bg-blue-600' : ''}
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Kalendarz
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className={viewMode === 'list' ? 'bg-blue-500 hover:bg-blue-600' : ''}
+                >
+                  <List className="w-4 h-4 mr-2" />
+                  Lista
+                </Button>
+              </div>
+              <Button onClick={() => handleOpenDialog()}>
+                <Plus className="w-4 h-4 mr-2" />
+                Nowe spotkanie
+              </Button>
+            </div>
           </div>
         </CardHeader>
 
         <CardContent>
-          {/* Filtry */}
-          <div className="flex gap-4 mb-6">
+          {viewMode === 'calendar' ? (
+            renderCalendar()
+          ) : (
+            <>
+              {/* Filtry */}
+              <div className="flex gap-4 mb-6">
             <div className="flex-1">
               <div className="relative">
                 <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -330,6 +506,8 @@ export default function Appointments() {
               </TableBody>
             </Table>
           </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
