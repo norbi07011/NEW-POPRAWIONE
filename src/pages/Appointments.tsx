@@ -541,14 +541,14 @@ export default function Appointments() {
             <div>
               <Label htmlFor="client_id">Klient (opcjonalnie)</Label>
               <Select 
-                value={formData.client_id} 
-                onValueChange={(value) => setFormData({ ...formData, client_id: value })}
+                value={formData.client_id || 'none'} 
+                onValueChange={(value) => setFormData({ ...formData, client_id: value === 'none' ? '' : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Wybierz klienta" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Brak</SelectItem>
+                  <SelectItem value="none">Brak</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name}
