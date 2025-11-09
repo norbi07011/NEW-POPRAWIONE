@@ -355,10 +355,31 @@ export default function InvoiceForm({ onNavigate, editInvoiceId }: InvoiceFormPr
               {t('invoiceForm.invoiceNumbering')}
             </CardTitle>
             <CardDescription>
-              {t('invoiceForm.numberingDescription')}
+              {editInvoiceId 
+                ? 'Edytujesz istniejącą fakturę - możesz zmienić numer jeśli się pomyliłeś / You are editing an existing invoice - you can change the number if you made a mistake'
+                : t('invoiceForm.numberingDescription')
+              }
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {editInvoiceId && (
+              <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                <div className="flex items-start gap-2">
+                  <Hash className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="font-medium text-amber-900 dark:text-amber-100">
+                      Tryb edycji / Edit Mode
+                    </div>
+                    <div className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                      Możesz zmienić numer faktury poniżej. Pamiętaj, że zmiana numeru może wpłynąć na numerację pozostałych faktur.
+                    </div>
+                    <div className="text-sm text-amber-700 dark:text-amber-300">
+                      You can change the invoice number below. Remember that changing the number may affect the numbering of other invoices.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="numberingMode">{t('invoiceForm.numberingMode')} *</Label>
@@ -418,6 +439,12 @@ export default function InvoiceForm({ onNavigate, editInvoiceId }: InvoiceFormPr
                   <p className="text-xs text-muted-foreground">
                     {t('invoiceForm.manualNumberHint')}
                   </p>
+                  {editInvoiceId && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-2">
+                      <Hash size={12} />
+                      Możesz zmienić numer faktury powyżej / You can change the invoice number above
+                    </p>
+                  )}
                 </div>
               )}
             </div>
