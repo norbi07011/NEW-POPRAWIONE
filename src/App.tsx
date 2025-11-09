@@ -316,6 +316,12 @@ Adres sieciowy: http://192.168.178.75:5002/
   const renderPage = () => {
     const handleNavigate = (page: string) => setCurrentPage(page as Page);
     
+    // Sprawdź czy to edycja faktury
+    if (currentPage.startsWith('invoices-edit-')) {
+      const invoiceId = currentPage.replace('invoices-edit-', '');
+      return <InvoiceForm onNavigate={handleNavigate} editInvoiceId={invoiceId} />;
+    }
+    
     switch (currentPage) {
       case 'reports':
         return <Reports />;

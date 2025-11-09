@@ -25,9 +25,10 @@ import {
 
 interface InvoiceFormProps {
   onNavigate: (page: string) => void;
+  editInvoiceId?: string;
 }
 
-export default function InvoiceForm({ onNavigate }: InvoiceFormProps) {
+export default function InvoiceForm({ onNavigate, editInvoiceId }: InvoiceFormProps) {
   const { t, i18n } = useTranslation();
   const { clients } = useClients();
   const { products } = useProducts();
@@ -73,6 +74,47 @@ export default function InvoiceForm({ onNavigate }: InvoiceFormProps) {
   }, [invoiceBreakdown, counters]);
 
   const dueDate = useMemo(() => addDays(issueDate, paymentTermDays), [issueDate, paymentTermDays]);
+
+  // Załaduj dane faktury do edycji
+  useEffect(() => {
+    if (editInvoiceId && invoices) {
+      const invoice = invoices.find(inv => inv.id === editInvoiceId);
+      if (invoice) {
+        console.log('📝 Ładowanie faktury do edycji:', invoice);
+        
+        // Ustaw podstawowe dane
+        setSelectedClientId(invoice.client_id || '');
+        setIssueDate(invoice.issue_date);
+        setPaymentTermDays(Math.floor((new Date(invoice.due_date).getTime() - new Date(invoice.issue_date).getTime()) / (1000 * 60 * 60 * 24)));
+        setNotes(invoice.notes || '');
+        setCurrency(invoice.currency || 'EUR');
+        setLanguage(invoice.language || 'nl');
+        setReverseCharge(invoice.reverse_charge || false);
+        
+        // Ustaw tryb numeracji na ręczny i wpisz istniejący numer
+        setNumberingMode('manual');
+        setManualInvoiceNumber(invoice.invoice_number);
+        
+        // Załaduj linie faktury
+        if (invoice.lines && invoice.lines.length > 0) {
+          setLines(invoice.lines.map(line => ({
+            product_id: line.product_id,
+            description: line.description,
+            quantity: line.quantity,
+            unit_price: line.unit_price,
+            vat_rate: line.vat_rate,
+          })));
+        }
+        
+        toast.success(`Edycja faktury ${invoice.invoice_number}`, {
+          description: 'Dane zostały załadowane'
+        });
+      } else {
+        toast.error('Nie znaleziono faktury');
+        onNavigate('invoices');
+      }
+    }
+  }, [editInvoiceId, invoices, onNavigate]);
 
   const totals = useMemo(() => {
     const validLines = lines.filter(l => l.description && l.quantity && l.unit_price !== undefined && l.vat_rate !== undefined);
@@ -189,7 +231,7 @@ export default function InvoiceForm({ onNavigate }: InvoiceFormProps) {
     }
 
     const now = new Date().toISOString();
-    const invoiceId = `invoice_${Date.now()}`;
+    const invoiceId = editInvoiceId || `invoice_${Date.now()}`;
 
     const invoiceLines: InvoiceLine[] = lines
       .filter(l => l.description)
@@ -229,7 +271,7 @@ export default function InvoiceForm({ onNavigate }: InvoiceFormProps) {
       ? t('pdf.reverseChargeNote')
       : '';
 
-    const newInvoice: Invoice = {
+    const invoiceData: Invoice = {
       id: invoiceId,
       invoice_number: invoiceNumber,
       company_id: company.id,
@@ -237,7 +279,7 @@ export default function InvoiceForm({ onNavigate }: InvoiceFormProps) {
       issue_date: issueDate,
       due_date: dueDate,
       currency: 'EUR',
-      status: 'unpaid',
+      status: editInvoiceId && invoices?.find(i => i.id === editInvoiceId)?.status || 'unpaid',
       total_net: totals.totalNet,
       total_vat: totals.totalVat,
       total_gross: totals.totalGross,
@@ -245,7 +287,7 @@ export default function InvoiceForm({ onNavigate }: InvoiceFormProps) {
       payment_qr_payload: qrPayload,
       payment_reference: paymentReference,
       notes,
-      created_at: now,
+      created_at: editInvoiceId ? invoices?.find(i => i.id === editInvoiceId)?.created_at || now : now,
       updated_at: now,
       lines: invoiceLines,
     };
@@ -255,17 +297,23 @@ export default function InvoiceForm({ onNavigate }: InvoiceFormProps) {
       const button = document.querySelector('button[type="submit"]') as HTMLButtonElement;
       if (button) button.disabled = true;
       
-      toast.loading('Saving invoice...', { id: 'save-invoice' });
+      const actionText = editInvoiceId ? 'Aktualizacja' : 'Zapisywanie';
+      toast.loading(`${actionText} faktury...`, { id: 'save-invoice' });
       
-      await createInvoice(newInvoice);
-      
-      toast.success(`✅ Invoice ${invoiceNumber} created`, { id: 'save-invoice' });
+      if (editInvoiceId) {
+        await updateInvoice(editInvoiceId, invoiceData);
+        toast.success(`✅ Faktura ${invoiceNumber} zaktualizowana`, { id: 'save-invoice' });
+      } else {
+        await createInvoice(invoiceData);
+        toast.success(`✅ Faktura ${invoiceNumber} utworzona`, { id: 'save-invoice' });
+      }
       
       // Navigate immediately without waiting
       onNavigate('invoices');
     } catch (error) {
-      toast.error('❌ Error creating invoice', { id: 'save-invoice' });
-      console.error('Create invoice error:', error);
+      const errorText = editInvoiceId ? 'aktualizacji' : 'tworzenia';
+      toast.error(`❌ Błąd ${errorText} faktury`, { id: 'save-invoice' });
+      console.error('Invoice save error:', error);
     }
   };
 
@@ -273,7 +321,9 @@ export default function InvoiceForm({ onNavigate }: InvoiceFormProps) {
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-semibold">{t('invoiceForm.title')}</h1>
+          <h1 className="text-3xl font-semibold">
+            {editInvoiceId ? t('invoiceForm.editTitle') : t('invoiceForm.title')}
+          </h1>
           <div className="flex items-center gap-3 mt-2">
             <Badge variant="outline" className="gap-1">
               <CalendarBlank size={14} />

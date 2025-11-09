@@ -506,7 +506,7 @@ ${company?.name || ''}`;
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48">
-                                  <DropdownMenuItem onClick={() => handleEditInvoice(invoice)}>
+                                  <DropdownMenuItem onClick={() => handleEditInvoice(invoice.id)}>
                                     <PencilSimple className="mr-2 pointer-events-none" size={16} />
                                     Edytuj
                                   </DropdownMenuItem>
