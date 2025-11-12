@@ -270,6 +270,11 @@ export default {
         companyName: 'Bedrijfsnaam',
         noCompanies: 'Geen bedrijven',
         createFirst: 'Maak je eerste bedrijf aan',
+        logo: 'Bedrijfslogo',
+        addLogo: 'Logo toevoegen',
+        selectImage: 'Selecteer een afbeeldingsbestand',
+        fileTooLarge: 'Bestand is te groot. Maximale grootte is 2MB',
+        logoFormats: 'PNG, JPG, SVG (max 2MB)',
       },
       tabs: {
         company: 'Bedrijfsgegevens',

@@ -270,6 +270,11 @@ export default {
         companyName: 'Company name',
         noCompanies: 'No companies',
         createFirst: 'Create your first company',
+        logo: 'Company logo',
+        addLogo: 'Add logo',
+        selectImage: 'Please select an image file',
+        fileTooLarge: 'File is too large. Maximum size is 2MB',
+        logoFormats: 'PNG, JPG, SVG (max 2MB)',
       },
       tabs: {
         company: 'Company',

@@ -271,6 +271,11 @@ export default {
         companyName: 'Nazwa firmy',
         noCompanies: 'Brak firm',
         createFirst: 'Utwórz swoją pierwszą firmę',
+        logo: 'Logo firmy',
+        addLogo: 'Dodaj logo',
+        selectImage: 'Proszę wybrać plik obrazu',
+        fileTooLarge: 'Plik jest za duży. Maksymalny rozmiar to 2MB',
+        logoFormats: 'PNG, JPG, SVG (max 2MB)',
       },
       tabs: {
         company: 'Dane firmy',
