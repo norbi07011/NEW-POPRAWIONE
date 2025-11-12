@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +29,7 @@ interface Document {
 }
 
 export default function Documents() {
+  const { t } = useTranslation();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -401,7 +403,7 @@ export default function Documents() {
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-sky-600">{stats.total}</div>
-              <div className="text-sm text-gray-600 mt-1">Wszystkie dokumenty</div>
+              <div className="text-sm text-gray-600 mt-1">{t('documents.allDocuments')}</div>
             </div>
           </CardContent>
         </Card>
