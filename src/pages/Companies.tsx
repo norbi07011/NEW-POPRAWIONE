@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Building2, Upload, Check } from 'lucide-react';
 import { Company } from '../types';
-import { useLanguage } from '../i18n/LanguageContext';
+import { useTranslation } from 'react-i18next';
 import { LicenseManager } from '@/services/LicenseManager';
 import { UpgradeDialog } from '@/components/UpgradeDialog';
 import { toast } from 'sonner';
 
 export default function Companies() {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
