@@ -2,12 +2,17 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Building2, Upload, Check } from 'lucide-react';
 import { Company } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
+import { LicenseManager } from '@/services/LicenseManager';
+import { UpgradeDialog } from '@/components/UpgradeDialog';
+import { toast } from 'sonner';
 
 export default function Companies() {
   const { t } = useLanguage();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState('');
   const [formData, setFormData] = useState<Partial<Company>>({
     name: '',
     kvk: '',
@@ -120,17 +125,33 @@ export default function Companies() {
     }
   };
 
+  const handleAddNew = () => {
+    // Sprawdź limit firm (tylko jeśli dodajemy nową, nie edytujemy)
+    if (!editingId) {
+      const check = LicenseManager.canCreateCompany(companies.length);
+      
+      if (!check.allowed) {
+        setUpgradeReason(check.message || 'Osiągnięto limit firm');
+        setShowUpgradeDialog(true);
+        toast.error(check.message);
+        return;
+      }
+    }
+    
+    setShowForm(!showForm);
+  };
+
   return (
     <div className="animate-fadeIn">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-linear-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
             {t('company.title') || 'Bedrijven'}
           </h1>
           <p className="text-gray-600 mt-1">{t('company.subtitle') || 'Beheer uw bedrijfsgegevens'}</p>
         </div>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={handleAddNew}
           className="btn btn-primary"
         >
           <Plus className="w-5 h-5 mr-2" />
@@ -320,7 +341,7 @@ export default function Companies() {
                   className="w-16 h-16 object-contain"
                 />
               ) : (
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center">
+                <div className="w-16 h-16 bg-linear-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center">
                   <Building2 className="w-8 h-8 text-purple-600" />
                 </div>
               )}
@@ -373,7 +394,7 @@ export default function Companies() {
           </div>
           <p className="text-gray-500 text-lg">Geen bedrijven gevonden</p>
           <button
-            onClick={() => setShowForm(true)}
+            onClick={handleAddNew}
             className="btn btn-primary mt-4"
           >
             <Plus className="w-5 h-5 mr-2" />
@@ -381,6 +402,13 @@ export default function Companies() {
           </button>
         </div>
       )}
+
+      {/* Upgrade Dialog */}
+      <UpgradeDialog 
+        isOpen={showUpgradeDialog}
+        onClose={() => setShowUpgradeDialog(false)}
+        reason={upgradeReason}
+      />
     </div>
   );
 }

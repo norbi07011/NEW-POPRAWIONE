@@ -8,13 +8,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Plus, FileText, DownloadSimple, CheckCircle, FilePdf, FileCsv, FileCode, FileXls, Trash, PencilSimple, Eye, EnvelopeSimple, DotsThree, WhatsappLogo, ArrowLeft, ArrowRight } from '@phosphor-icons/react';
+import { Plus, FileText, DownloadSimple, CheckCircle, FilePdf, FileCsv, FileCode, FileXls, Trash, PencilSimple, Eye, EnvelopeSimple, DotsThree, WhatsappLogo, ArrowLeft, ArrowRight, Crown } from '@phosphor-icons/react';
 import { Invoice, Client, Company } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/invoice-utils';
 import { toast } from 'sonner';
 import { generateInvoicePDF, generateMobilePDF } from '@/lib/pdf-generator';
 import { exportToCSV, exportToJSON, exportToExcel, exportToXML } from '@/lib/export-utils';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { LicenseManager } from '@/services/LicenseManager';
+import { UpgradeDialog } from '@/components/UpgradeDialog';
 
 interface InvoicesProps {
   onNavigate: (page: string) => void;
@@ -28,7 +30,26 @@ export default function Invoices({ onNavigate }: InvoicesProps) {
   const { company, loading: companyLoading } = useCompany();
   const [selectedTemplateId] = useState('classic');
   const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState('');
   const isMobile = useIsMobile();
+
+  const licenseInfo = LicenseManager.getLicenseInfo();
+  const currentPlan = LicenseManager.getCurrentPlan();
+
+  const handleCreateInvoice = () => {
+    // Sprawdź limit faktur
+    const check = LicenseManager.canCreateInvoice(invoices?.length || 0);
+    
+    if (!check.allowed) {
+      setUpgradeReason(check.message || 'Osiągnięto limit faktur');
+      setShowUpgradeDialog(true);
+      toast.error(check.message);
+      return;
+    }
+
+    onNavigate('invoices-new');
+  };
 
   const sortedInvoices = useMemo(() => {
     return (invoices || []).sort((a, b) =>
@@ -357,11 +378,16 @@ ${company?.name || ''}`;
               Zarządzaj wszystkimi fakturami w jednym miejscu
             </p>
             <button 
-              onClick={() => onNavigate('invoices-new')}
+              onClick={handleCreateInvoice}
               className="px-10 py-5 bg-linear-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-2xl font-black text-lg shadow-lg hover:shadow-xl border-2 border-blue-200 transition-all duration-300 hover:scale-105 flex items-center gap-3 w-fit"
             >
               <Plus size={24} weight="bold" />
               Nowa faktura
+              {currentPlan === 'free' && (
+                <Badge variant="secondary" className="ml-2">
+                  {invoices?.length || 0}/5
+                </Badge>
+              )}
             </button>
           </div>
         </div>
@@ -387,7 +413,7 @@ ${company?.name || ''}`;
                 <h3 className="text-2xl font-bold text-black mb-3">{t('invoices.noInvoices')}</h3>
                 <p className="text-black mb-6 text-lg">{t('invoices.createFirst')}</p>
                 <button 
-                  onClick={() => onNavigate('invoices-new')}
+                  onClick={handleCreateInvoice}
                   className="px-8 py-4 bg-linear-to-r from-sky-600 to-blue-600 text-white rounded-2xl hover:from-sky-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 font-bold text-lg shadow-xl"
                 >
                   <Plus className="inline mr-2" size={20} />
@@ -779,6 +805,23 @@ ${company?.name || ''}`;
             )}
           </div>
         </div>
+
+        {/* License Info Badge */}
+        {currentPlan !== 'free' && (
+          <div className="fixed bottom-4 right-4 z-50">
+            <Badge className="bg-linear-to-r from-purple-500 to-pink-500 text-white px-4 py-2 shadow-lg">
+              <Crown className="w-4 h-4 mr-2" weight="fill" />
+              {currentPlan.toUpperCase()} Plan
+            </Badge>
+          </div>
+        )}
+
+        {/* Upgrade Dialog */}
+        <UpgradeDialog 
+          isOpen={showUpgradeDialog}
+          onClose={() => setShowUpgradeDialog(false)}
+          reason={upgradeReason}
+        />
       </div>
     </div>
   );
