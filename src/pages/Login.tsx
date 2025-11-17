@@ -54,8 +54,12 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Logo i Nazwa */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg">
-            <span className="text-3xl font-bold text-white">MB</span>
+          <div className="inline-flex items-center justify-center mb-6">
+            <img 
+              src="/messu-bouw-logo.jpg" 
+              alt="Messu Bouw Logo" 
+              className="w-32 h-32 object-contain rounded-2xl shadow-2xl"
+            />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Messu Bouw
