@@ -14,18 +14,18 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// FIREBASE CONFIG - ZAMIEŃ NA SWOJE DANE!
+// FIREBASE CONFIG - ✅ SKONFIGUROWANE!
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY", // Zamień na swój klucz
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyC0KzCniUt_NYRYaefG7bUQZ4AqvO7dMUk",
+  authDomain: "messu-bouw-management-system.firebaseapp.com",
+  projectId: "messu-bouw-management-system",
+  storageBucket: "messu-bouw-management-system.firebasestorage.app",
+  messagingSenderId: "988554164944",
+  appId: "1:988554164944:web:acf82fcd8c987364d6fcd5"
 };
 
 // DEMO CONFIG (działa offline, bez Firebase)
-const DEMO_MODE = true; // Zmień na false gdy podłączysz prawdziwy Firebase
+const DEMO_MODE = false; // ✅ CLOUD MODE WŁĄCZONY!
 
 // Initialize Firebase
 let app;
