@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCompany } from '@/hooks/useElectronDB';
 import { useAudio } from '@/contexts/AudioContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CompanyManager } from '@/components/CompanyManager';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Upload, Image as ImageIcon, Plus, Copy, Printer, Download } from '@phosphor-icons/react';
+import { Upload, Image as ImageIcon, Plus, Copy, Printer, Download, SignOut, User as UserIcon } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { Company, Language, Invoice, Client } from '@/types';
 import { InvoiceTemplateSelector } from '@/components/InvoiceTemplateSelector';
@@ -23,11 +24,122 @@ import { CSVImport } from '@/components/CSVImport';
 import { PEZET_WEEKBRIEF_TEMPLATE, DEFAULT_TEMPLATES } from '@/components/TimeTracking/Weekbrief/defaultTemplates';
 import { getTemplateById, defaultTemplates } from '@/lib/invoice-templates';
 import { cn } from '@/lib/utils';
+import { LicenseManager } from '@/services/LicenseManager';
+import { UpgradeDialog } from '@/components/UpgradeDialog';
+import { Badge } from '@/components/ui/badge';
+import { Crown, Key } from '@phosphor-icons/react';
+import { DEMO_MODE } from '@/config/firebase';
+
+// Account Section Component
+function AccountSection() {
+  const { user, signOut } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleSignOut = async () => {
+    setIsLoggingOut(true);
+    try {
+      await signOut();
+      // Routing will automatically redirect to /login
+    } catch (error) {
+      setIsLoggingOut(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* User Info Card */}
+      <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+        <Avatar className="w-16 h-16 border-2 border-blue-500">
+          <AvatarFallback className="bg-blue-500 text-white text-xl">
+            <UserIcon size={32} weight="fill" />
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1">
+          <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+            {user?.displayName || user?.email?.split('@')[0] || 'Użytkownik'}
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{user?.email}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+            ID: {user?.uid?.substring(0, 12)}...
+          </p>
+        </div>
+        {DEMO_MODE && (
+          <Badge variant="secondary" className="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200">
+            🔧 Tryb Demo
+          </Badge>
+        )}
+      </div>
+
+      {/* Account Stats */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Status konta</p>
+          <p className="text-lg font-semibold text-blue-700 dark:text-blue-400">Aktywne</p>
+        </div>
+        <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Synchronizacja</p>
+          <p className="text-lg font-semibold text-green-700 dark:text-green-400">
+            {DEMO_MODE ? 'Lokalna' : 'Chmura'}
+          </p>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <Button
+          variant="outline"
+          className="w-full justify-start"
+          disabled
+        >
+          <UserIcon className="mr-2" size={20} />
+          Edytuj profil (wkrótce)
+        </Button>
+        
+        <Button
+          variant="outline"
+          className="w-full justify-start"
+          disabled
+        >
+          <Key className="mr-2" size={20} />
+          Zmień hasło (wkrótce)
+        </Button>
+        
+        <Button
+          variant="destructive"
+          className="w-full justify-start"
+          onClick={handleSignOut}
+          disabled={isLoggingOut}
+        >
+          <SignOut className="mr-2" size={20} />
+          {isLoggingOut ? 'Wylogowywanie...' : 'Wyloguj się'}
+        </Button>
+      </div>
+
+      {/* Info Box */}
+      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+        <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">
+          ℹ️ Twoje dane są bezpieczne
+        </h4>
+        <p className="text-sm text-blue-800 dark:text-blue-200">
+          {DEMO_MODE ? (
+            <>Tryb demo - dane przechowywane lokalnie w przeglądarce. Firebase nie jest aktywny.</>
+          ) : (
+            <>Wszystkie dane są szyfrowane i przechowywane w bezpiecznej chmurze Firebase. Tylko Ty masz do nich dostęp.</>
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function Settings() {
   const { isMuted } = useAudio();
   const { t, i18n } = useTranslation();
   const { company, updateCompany, loading } = useCompany();
+  
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const licenseInfo = LicenseManager.getLicenseInfo();
+  const currentPlan = LicenseManager.getCurrentPlan();
   
   // Default company data jeśli brak w bazie
   const defaultCompany = {
@@ -257,6 +369,8 @@ export default function Settings() {
 
       <Tabs defaultValue="companies" className="w-full">
         <TabsList>
+          <TabsTrigger value="account">👤 Konto</TabsTrigger>
+          <TabsTrigger value="license">🔐 Licencja</TabsTrigger>
           <TabsTrigger value="companies">{t('settings.companies.title')}</TabsTrigger>
           <TabsTrigger value="company">{t('settings.tabs.company')}</TabsTrigger>
           <TabsTrigger value="preferences">{t('settings.tabs.preferences')}</TabsTrigger>
@@ -268,6 +382,178 @@ export default function Settings() {
           <TabsTrigger value="downloads">{t('settings.tabs.downloads')}</TabsTrigger>
           <TabsTrigger value="desktop">{t('settings.tabs.desktop')}</TabsTrigger>
         </TabsList>
+
+        {/* Account Tab */}
+        <TabsContent value="account">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                👤 Konto użytkownika
+              </CardTitle>
+              <CardDescription>
+                Zarządzaj swoim kontem i danymi logowania
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <AccountSection />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="license">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="w-6 h-6 text-yellow-500" weight="fill" />
+                Licencja i Plan
+              </CardTitle>
+              <CardDescription>
+                Zarządzaj swoim planem subskrypcji i aktywuj klucz licencyjny
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Aktualny plan */}
+              <div className="bg-linear-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 p-6 rounded-lg border-2 border-blue-200">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-xl font-bold">Aktualny plan:</h3>
+                    <Badge className="mt-2 text-lg px-4 py-1">
+                      {currentPlan === 'free' && '🆓 FREE'}
+                      {currentPlan === 'starter' && '🚀 STARTER'}
+                      {currentPlan === 'pro' && '👑 PRO'}
+                    </Badge>
+                  </div>
+                  {currentPlan !== 'free' && (
+                    <Crown className="w-16 h-16 text-yellow-500" weight="fill" />
+                  )}
+                </div>
+
+                {/* Limity */}
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="bg-white dark:bg-gray-900 p-4 rounded-lg">
+                    <div className="text-sm text-muted-foreground">Faktury</div>
+                    <div className="text-2xl font-bold">
+                      {licenseInfo.maxInvoices === Infinity ? '∞ Unlimited' : `Max ${licenseInfo.maxInvoices}`}
+                    </div>
+                  </div>
+                  <div className="bg-white dark:bg-gray-900 p-4 rounded-lg">
+                    <div className="text-sm text-muted-foreground">Firmy</div>
+                    <div className="text-2xl font-bold">
+                      {licenseInfo.maxCompanies === Infinity ? '∞ Unlimited' : `Max ${licenseInfo.maxCompanies}`}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Funkcje */}
+                <div className="mt-4 space-y-2">
+                  <h4 className="font-semibold">Dostępne funkcje:</h4>
+                  <ul className="space-y-1">
+                    <li className="flex items-center gap-2">
+                      {licenseInfo.features.pdfExport ? '✅' : '❌'} PDF Export
+                    </li>
+                    <li className="flex items-center gap-2">
+                      {licenseInfo.features.cloudBackup ? '✅' : '❌'} Cloud Backup
+                    </li>
+                    <li className="flex items-center gap-2">
+                      {licenseInfo.features.multiDevice ? '✅' : '❌'} Multi-Device Sync
+                    </li>
+                    <li className="flex items-center gap-2">
+                      {licenseInfo.features.prioritySupport ? '✅' : '❌'} Priority Support
+                    </li>
+                    <li className="flex items-center gap-2">
+                      {licenseInfo.features.mobileApps ? '✅' : '❌'} Mobile Apps
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Przyciski akcji */}
+              <div className="flex gap-4">
+                <Button 
+                  onClick={() => setShowUpgradeDialog(true)}
+                  size="lg"
+                  className="flex-1"
+                >
+                  <Crown className="w-5 h-5 mr-2" weight="fill" />
+                  {currentPlan === 'free' ? 'Upgrade do Premium' : 'Zmień plan'}
+                </Button>
+                
+                {currentPlan !== 'free' && (
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      if (confirm('Czy na pewno chcesz wrócić do wersji FREE?')) {
+                        LicenseManager.resetToFree();
+                        toast.success('Zresetowano do wersji FREE');
+                        window.location.reload();
+                      }
+                    }}
+                  >
+                    Reset do FREE
+                  </Button>
+                )}
+              </div>
+
+              {/* Testowe klucze */}
+              {currentPlan === 'free' && (
+                <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg border-2 border-yellow-200">
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Key className="w-5 h-5" />
+                    Testowe klucze licencyjne:
+                  </h4>
+                  <div className="space-y-2 font-mono text-sm">
+                    <div className="flex items-center gap-2">
+                      <code className="bg-white dark:bg-gray-900 px-3 py-1 rounded flex-1">
+                        MESSUBOUW-STARTER-2025-TEST
+                      </code>
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          navigator.clipboard.writeText('MESSUBOUW-STARTER-2025-TEST');
+                          toast.success('Skopiowano klucz STARTER');
+                        }}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <code className="bg-white dark:bg-gray-900 px-3 py-1 rounded flex-1">
+                        MESSUBOUW-PRO-2025-TEST
+                      </code>
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          navigator.clipboard.writeText('MESSUBOUW-PRO-2025-TEST');
+                          toast.success('Skopiowano klucz PRO');
+                        }}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    💡 Skopiuj klucz, kliknij "Upgrade do Premium" i aktywuj!
+                  </p>
+                </div>
+              )}
+
+              {/* Informacja o kluczu */}
+              {licenseInfo.key && (
+                <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg border-2 border-green-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Key className="w-5 h-5 text-green-600" />
+                    <h4 className="font-semibold">Aktywny klucz licencyjny:</h4>
+                  </div>
+                  <code className="font-mono text-sm bg-white dark:bg-gray-900 px-3 py-2 rounded block">
+                    {licenseInfo.key}
+                  </code>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="companies">
           <Card>
