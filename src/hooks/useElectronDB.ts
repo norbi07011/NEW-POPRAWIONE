@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Preferences } from '@capacitor/preferences';
 import { Capacitor } from '@capacitor/core';
+import { useAuth } from '@/contexts/AuthContext';
+import { FirestoreService } from '@/services/FirestoreService';
+import { DEMO_MODE } from '@/config/firebase';
 
 // Sprawdź czy działamy w Electron
 const isElectron = () => {
@@ -180,12 +183,28 @@ export function useElectronDB<T>(
 export function useInvoices() {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   const fetchInvoices = useCallback(async () => {
     setLoading(true);
     try {
-      console.log('📥 fetchInvoices called:', { isElectron: isElectron(), isMobile: isMobile() });
+      console.log('📥 fetchInvoices called:', { 
+        isElectron: isElectron(), 
+        isMobile: isMobile(), 
+        hasUser: !!user,
+        demoMode: DEMO_MODE 
+      });
       
+      // FIREBASE MODE - używaj Firestore gdy jest użytkownik i nie jest DEMO_MODE
+      if (!DEMO_MODE && user?.uid) {
+        console.log('☁️ Fetching from Firestore for user:', user.uid);
+        const result = await FirestoreService.getInvoices(user.uid);
+        setInvoices(result || []);
+        console.log('✅ Loaded from Firestore:', result?.length || 0, 'invoices');
+        return;
+      }
+      
+      // ELECTRON MODE
       if (isElectron() && window.electronAPI) {
         console.log('🖥️ Fetching from Electron database');
         const result = await window.electronAPI.database.getInvoices();
@@ -193,14 +212,12 @@ export function useInvoices() {
         console.log('✅ Loaded from Electron:', result?.length || 0, 'invoices');
       } else if (isMobile()) {
         console.log('📱 Fetching from Capacitor Preferences');
-        // Użyj Capacitor Preferences na urządzeniach mobilnych
         const { value } = await Preferences.get({ key: 'invoices' });
         const data = value ? JSON.parse(value) : [];
         setInvoices(data);
         console.log('✅ Loaded from Capacitor:', data.length, 'invoices');
       } else {
         console.log('🌐 Fetching from localStorage');
-        // Fallback na localStorage
         const stored = localStorage.getItem('invoices');
         const data = stored ? JSON.parse(stored) : [];
         setInvoices(data);
@@ -212,39 +229,45 @@ export function useInvoices() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const createInvoice = useCallback(async (invoice: any) => {
     try {
-      console.log('💾 createInvoice called:', { invoice, isElectron: isElectron(), isMobile: isMobile() });
+      console.log('💾 createInvoice called:', { invoice, hasUser: !!user, demoMode: DEMO_MODE });
       
+      // FIREBASE MODE
+      if (!DEMO_MODE && user?.uid) {
+        console.log('☁️ Saving to Firestore for user:', user.uid);
+        const { id, ...invoiceData } = invoice;
+        const newId = await FirestoreService.createInvoice(user.uid, invoiceData);
+        console.log('✅ Invoice saved to Firestore:', invoice.invoice_number);
+        fetchInvoices();
+        return { ...invoiceData, id: newId };
+      }
+      
+      // ELECTRON MODE
       if (isElectron() && window.electronAPI) {
         console.log('🖥️ Using Electron database');
         const result = await window.electronAPI.database.createInvoice(invoice);
-        // Odśwież w tle, nie blokuj
         fetchInvoices();
         return result;
       } else if (isMobile()) {
         console.log('📱 Using Capacitor Preferences');
-        // Użyj Capacitor Preferences na urządzeniach mobilnych
         const { value } = await Preferences.get({ key: 'invoices' });
         const invoices = value ? JSON.parse(value) : [];
         const newInvoice = { ...invoice, id: invoice.id || Date.now().toString(), created_at: invoice.created_at || new Date().toISOString() };
         const updated = [...invoices, newInvoice];
         await Preferences.set({ key: 'invoices', value: JSON.stringify(updated) });
         console.log('✅ Invoice saved to Capacitor Preferences:', newInvoice.invoice_number);
-        // Odśwież w tle, nie blokuj
         fetchInvoices();
         return newInvoice;
       } else {
         console.log('🌐 Using localStorage fallback');
-        // Fallback na localStorage
         const stored = localStorage.getItem('invoices');
         const invoices = stored ? JSON.parse(stored) : [];
         const newInvoice = { ...invoice, id: invoice.id || Date.now().toString(), created_at: invoice.created_at || new Date().toISOString() };
         const updated = [...invoices, newInvoice];
         
-        // Zapisz asynchronicznie w Web Worker (jeśli dostępny)
         try {
           localStorage.setItem('invoices', JSON.stringify(updated));
           console.log('✅ Invoice saved to localStorage:', newInvoice.invoice_number, 'Total:', updated.length);
@@ -253,7 +276,6 @@ export function useInvoices() {
           throw new Error('Storage quota exceeded. Please delete old invoices.');
         }
         
-        // Odśwież w tle, nie blokuj - użyj setTimeout
         setTimeout(() => fetchInvoices(), 0);
         return newInvoice;
       }
@@ -261,16 +283,24 @@ export function useInvoices() {
       console.error('❌ Error creating invoice:', error);
       throw error;
     }
-  }, [fetchInvoices]);
+  }, [fetchInvoices, user]);
 
   const updateInvoice = useCallback(async (id: string, invoice: any) => {
     try {
+      // FIREBASE MODE
+      if (!DEMO_MODE && user?.uid) {
+        console.log('☁️ Updating invoice in Firestore:', id);
+        await FirestoreService.updateInvoice(user.uid, id, invoice);
+        await fetchInvoices();
+        return invoice;
+      }
+      
+      // ELECTRON MODE
       if (isElectron() && window.electronAPI) {
         const result = await window.electronAPI.database.updateInvoice(id, invoice);
         await fetchInvoices();
         return result;
       } else if (isMobile()) {
-        // Użyj Capacitor Preferences na urządzeniach mobilnych
         const { value } = await Preferences.get({ key: 'invoices' });
         const invoices = value ? JSON.parse(value) : [];
         const updated = invoices.map((inv: any) => inv.id === id ? { ...inv, ...invoice } : inv);
@@ -278,7 +308,6 @@ export function useInvoices() {
         await fetchInvoices();
         return invoice;
       } else {
-        // Fallback na localStorage
         const stored = localStorage.getItem('invoices');
         const invoices = stored ? JSON.parse(stored) : [];
         const updated = invoices.map((inv: any) => inv.id === id ? { ...inv, ...invoice } : inv);
@@ -290,16 +319,24 @@ export function useInvoices() {
       console.error('Error updating invoice:', error);
       throw error;
     }
-  }, [fetchInvoices]);
+  }, [fetchInvoices, user]);
 
   const deleteInvoice = useCallback(async (id: string) => {
     try {
+      // FIREBASE MODE
+      if (!DEMO_MODE && user?.uid) {
+        console.log('☁️ Deleting invoice from Firestore:', id);
+        await FirestoreService.deleteInvoice(user.uid, id);
+        await fetchInvoices();
+        return true;
+      }
+      
+      // ELECTRON MODE
       if (isElectron() && window.electronAPI) {
         const result = await window.electronAPI.database.deleteInvoice(id);
         await fetchInvoices();
         return result;
       } else if (isMobile()) {
-        // Użyj Capacitor Preferences na urządzeniach mobilnych
         const { value } = await Preferences.get({ key: 'invoices' });
         const invoices = value ? JSON.parse(value) : [];
         const updated = invoices.filter((inv: any) => inv.id !== id);
@@ -307,7 +344,6 @@ export function useInvoices() {
         await fetchInvoices();
         return true;
       } else {
-        // Fallback na localStorage
         const stored = localStorage.getItem('invoices');
         const invoices = stored ? JSON.parse(stored) : [];
         const updated = invoices.filter((inv: any) => inv.id !== id);
@@ -319,7 +355,7 @@ export function useInvoices() {
       console.error('Error deleting invoice:', error);
       throw error;
     }
-  }, [fetchInvoices]);
+  }, [fetchInvoices, user]);
 
   useEffect(() => {
     fetchInvoices();
@@ -339,11 +375,16 @@ export function useInvoices() {
 export function useClients() {
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   const fetchClients = useCallback(async () => {
     setLoading(true);
     try {
-      if (isElectron() && window.electronAPI) {
+      // FIREBASE MODE
+      if (!DEMO_MODE && user?.uid) {
+        const result = await FirestoreService.getClients(user.uid);
+        setClients(result || []);
+      } else if (isElectron() && window.electronAPI) {
         const result = await window.electronAPI.database.getClients();
         setClients(result || []);
       } else {
@@ -356,11 +397,17 @@ export function useClients() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const createClient = useCallback(async (client: any) => {
     try {
-      if (isElectron() && window.electronAPI) {
+      // FIREBASE MODE
+      if (!DEMO_MODE && user?.uid) {
+        const { id, ...clientData } = client;
+        const newId = await FirestoreService.createClient(user.uid, clientData);
+        await fetchClients();
+        return { ...clientData, id: newId };
+      } else if (isElectron() && window.electronAPI) {
         const result = await window.electronAPI.database.createClient(client);
         await fetchClients();
         return result;
@@ -377,11 +424,16 @@ export function useClients() {
       console.error('Error creating client:', error);
       throw error;
     }
-  }, [fetchClients]);
+  }, [fetchClients, user]);
 
   const updateClient = useCallback(async (id: string, client: any) => {
     try {
-      if (isElectron() && window.electronAPI) {
+      // FIREBASE MODE
+      if (!DEMO_MODE && user?.uid) {
+        await FirestoreService.updateClient(user.uid, id, client);
+        await fetchClients();
+        return client;
+      } else if (isElectron() && window.electronAPI) {
         const result = await window.electronAPI.database.updateClient(id, client);
         await fetchClients();
         return result;
@@ -397,11 +449,16 @@ export function useClients() {
       console.error('Error updating client:', error);
       throw error;
     }
-  }, [fetchClients]);
+  }, [fetchClients, user]);
 
   const deleteClient = useCallback(async (id: string) => {
     try {
-      if (isElectron() && window.electronAPI) {
+      // FIREBASE MODE
+      if (!DEMO_MODE && user?.uid) {
+        await FirestoreService.deleteClient(user.uid, id);
+        await fetchClients();
+        return true;
+      } else if (isElectron() && window.electronAPI) {
         const result = await window.electronAPI.database.deleteClient(id);
         await fetchClients();
         return result;
@@ -417,7 +474,7 @@ export function useClients() {
       console.error('Error deleting client:', error);
       throw error;
     }
-  }, [fetchClients]);
+  }, [fetchClients, user]);
 
   useEffect(() => {
     fetchClients();
@@ -437,11 +494,16 @@ export function useClients() {
 export function useProducts() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      if (isElectron() && window.electronAPI) {
+      // FIREBASE MODE
+      if (!DEMO_MODE && user?.uid) {
+        const result = await FirestoreService.getProducts(user.uid);
+        setProducts(result || []);
+      } else if (isElectron() && window.electronAPI) {
         const result = await window.electronAPI.database.getProducts();
         setProducts(result || []);
       } else {
@@ -454,11 +516,17 @@ export function useProducts() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const createProduct = useCallback(async (product: any) => {
     try {
-      if (isElectron() && window.electronAPI) {
+      // FIREBASE MODE
+      if (!DEMO_MODE && user?.uid) {
+        const { id, ...productData } = product;
+        const newId = await FirestoreService.createProduct(user.uid, productData);
+        await fetchProducts();
+        return { ...productData, id: newId };
+      } else if (isElectron() && window.electronAPI) {
         const result = await window.electronAPI.database.createProduct(product);
         await fetchProducts();
         return result;
@@ -475,11 +543,16 @@ export function useProducts() {
       console.error('Error creating product:', error);
       throw error;
     }
-  }, [fetchProducts]);
+  }, [fetchProducts, user]);
 
   const updateProduct = useCallback(async (id: string, product: any) => {
     try {
-      if (isElectron() && window.electronAPI) {
+      // FIREBASE MODE
+      if (!DEMO_MODE && user?.uid) {
+        await FirestoreService.updateProduct(user.uid, id, product);
+        await fetchProducts();
+        return product;
+      } else if (isElectron() && window.electronAPI) {
         const result = await window.electronAPI.database.updateProduct(id, product);
         await fetchProducts();
         return result;
@@ -499,7 +572,12 @@ export function useProducts() {
 
   const deleteProduct = useCallback(async (id: string) => {
     try {
-      if (isElectron() && window.electronAPI) {
+      // FIREBASE MODE
+      if (!DEMO_MODE && user?.uid) {
+        await FirestoreService.deleteProduct(user.uid, id);
+        await fetchProducts();
+        return true;
+      } else if (isElectron() && window.electronAPI) {
         const result = await window.electronAPI.database.deleteProduct(id);
         await fetchProducts();
         return result;
@@ -515,7 +593,7 @@ export function useProducts() {
       console.error('Error deleting product:', error);
       throw error;
     }
-  }, [fetchProducts]);
+  }, [fetchProducts, user]);
 
   useEffect(() => {
     fetchProducts();
@@ -535,11 +613,16 @@ export function useProducts() {
 export function useCompany() {
   const [company, setCompany] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   const fetchCompany = useCallback(async () => {
     setLoading(true);
     try {
-      if (isElectron() && window.electronAPI) {
+      // FIREBASE MODE
+      if (!DEMO_MODE && user?.uid) {
+        const result = await FirestoreService.getCompany(user.uid);
+        setCompany(result);
+      } else if (isElectron() && window.electronAPI) {
         const result = await window.electronAPI.database.getCompany();
         setCompany(result);
       } else {
@@ -552,11 +635,16 @@ export function useCompany() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const updateCompany = useCallback(async (companyData: any) => {
     try {
-      if (isElectron() && window.electronAPI) {
+      // FIREBASE MODE
+      if (!DEMO_MODE && user?.uid) {
+        await FirestoreService.updateCompany(user.uid, companyData);
+        setCompany({ ...company, ...companyData });
+        return companyData;
+      } else if (isElectron() && window.electronAPI) {
         const result = await window.electronAPI.database.updateCompany(companyData);
         setCompany(result);
         return result;
@@ -569,7 +657,7 @@ export function useCompany() {
       console.error('Error updating company:', error);
       throw error;
     }
-  }, []);
+  }, [user, company]);
 
   useEffect(() => {
     fetchCompany();
