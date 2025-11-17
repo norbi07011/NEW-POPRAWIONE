@@ -376,8 +376,8 @@ Adres sieciowy: http://192.168.178.75:5002/
       <div className="flex gap-3 lg:gap-6 p-3 lg:p-6">
         {/* Sidebar - Desktop always visible, Mobile overlay */}
         <aside className={`
-          premium-card w-72 h-fit bg-white/95 dark:bg-black/95 backdrop-blur-md
-          lg:sticky lg:top-6 lg:self-start
+          premium-card w-72 bg-white/95 dark:bg-black/95 backdrop-blur-md
+          lg:sticky lg:top-6 lg:h-fit lg:self-start
           fixed top-0 left-0 bottom-0 z-40 overflow-y-auto
           transition-transform duration-300 ease-in-out
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -402,7 +402,7 @@ Adres sieciowy: http://192.168.178.75:5002/
               <AudioToggle />
             </div>
           </div>
-          <nav className="px-4 py-6 space-y-2">
+          <nav className="px-4 py-6 pb-20 space-y-2">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.id || 
