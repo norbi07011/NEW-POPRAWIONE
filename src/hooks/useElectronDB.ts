@@ -676,10 +676,24 @@ export function useCompanies() {
   const [companies, setCompanies] = useState<any[]>([]);
   const [activeCompanyId, setActiveCompanyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   const fetchCompanies = useCallback(async () => {
     setLoading(true);
     try {
+      // FIREBASE MODE - pobierz firmę z Firestore jako pojedynczy dokument
+      if (!DEMO_MODE && user?.uid) {
+        const company = await FirestoreService.getCompany(user.uid);
+        const companiesList = company ? [company] : [];
+        setCompanies(companiesList);
+        if (companiesList.length > 0) {
+          setActiveCompanyId(companiesList[0].id || 'default');
+        }
+        setLoading(false);
+        return;
+      }
+      
+      // FALLBACK - localStorage
       const stored = await getStorageItem('companies');
       let companiesList = stored ? JSON.parse(stored) : [];
 
