@@ -367,11 +367,10 @@ export default function Settings() {
         </div>
       </div>
 
-      <Tabs defaultValue="companies" className="w-full">
+      <Tabs defaultValue="company" className="w-full">
         <TabsList>
           <TabsTrigger value="account">👤 Konto</TabsTrigger>
           {/* <TabsTrigger value="license">🔐 Licencja</TabsTrigger> */}
-          <TabsTrigger value="companies">{t('settings.companies.title')}</TabsTrigger>
           <TabsTrigger value="company">{t('settings.tabs.company')}</TabsTrigger>
           <TabsTrigger value="preferences">{t('settings.tabs.preferences')}</TabsTrigger>
           <TabsTrigger value="backup">💾 Backup & Restore</TabsTrigger>
@@ -402,17 +401,7 @@ export default function Settings() {
 
         {/* HIDDEN: License tab removed from user interface */}
 
-        <TabsContent value="companies">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('settings.companies.title')}</CardTitle>
-              <CardDescription>{t('settings.companies.description')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <CompanyManager />
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* REMOVED: Companies multi-management - using single company only */}
 
         <TabsContent value="company">
           <Card>
