@@ -79,7 +79,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       
       if (error) throw error;
-      toast.success('Konto utworzone! Sprawdź email aby potwierdzić.');
+      
+      // Profesjonalny komunikat z instrukcjami
+      toast.success(
+        '✅ Konto utworzone!\n\n' +
+        '📧 Sprawdź swoją skrzynkę pocztową i kliknij w link aktywacyjny.\n' +
+        '⏰ Link ważny przez 24 godziny.\n\n' +
+        '💡 Nie widzisz emaila? Sprawdź folder SPAM.',
+        { duration: 10000 } // 10 sekund
+      );
     } catch (error: any) {
       console.error('Sign up error:', error);
       throw new Error(getErrorMessage(error.message));

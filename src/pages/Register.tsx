@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeSlash, GoogleLogo, EnvelopeSimple, Lock, User } from '@phosphor-icons/react';
+import { Eye, EyeSlash, GoogleLogo, EnvelopeSimple, Lock, User, CheckCircle, Envelope } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { DEMO_MODE } from '@/config/firebase';
 
@@ -17,6 +17,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
   const { signUp, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
@@ -41,7 +42,8 @@ export default function Register() {
     setLoading(true);
     try {
       await signUp(email, password);
-      navigate('/');
+      // Pokazujemy informacyjny banner zamiast przekierowania
+      setShowEmailConfirmation(true);
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -81,8 +83,41 @@ export default function Register() {
           </p>
         </div>
 
+        {/* Email Confirmation Success Banner */}
+        {showEmailConfirmation && (
+          <div className="mb-6 p-6 bg-green-50 dark:bg-green-900/20 border-2 border-green-500 dark:border-green-600 rounded-xl animate-fade-in">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <CheckCircle size={32} weight="fill" className="text-green-600 dark:text-green-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-green-900 dark:text-green-100 mb-2">
+                  ✅ Konto utworzone pomyślnie!
+                </h3>
+                <div className="space-y-2 text-sm text-green-800 dark:text-green-200">
+                  <p className="flex items-center gap-2">
+                    <Envelope size={16} weight="fill" />
+                    <span>Sprawdź swoją skrzynkę pocztową: <strong>{email}</strong></span>
+                  </p>
+                  <p>📧 Kliknij w link aktywacyjny, aby potwierdzić konto</p>
+                  <p>⏰ Link ważny przez <strong>24 godziny</strong></p>
+                  <p className="mt-3 pt-3 border-t border-green-300 dark:border-green-700">
+                    💡 <strong>Nie widzisz emaila?</strong> Sprawdź folder SPAM/Wiadomości-śmieci
+                  </p>
+                </div>
+                <button
+                  onClick={() => navigate('/login')}
+                  className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  Przejdź do logowania
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* DEMO MODE Info */}
-        {DEMO_MODE && (
+        {DEMO_MODE && !showEmailConfirmation && (
           <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
             <p className="text-sm text-amber-800 dark:text-amber-200 text-center">
               <strong>🔧 Tryb Demo</strong> - Możesz użyć dowolnego emaila i hasła
@@ -91,6 +126,7 @@ export default function Register() {
         )}
 
         {/* Karta Rejestracji */}
+        {!showEmailConfirmation && (
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
@@ -196,6 +232,7 @@ export default function Register() {
             </button>
           </div>
         </div>
+        )}
 
         {/* Footer */}
         <p className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
