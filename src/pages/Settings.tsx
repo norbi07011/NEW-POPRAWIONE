@@ -401,14 +401,25 @@ export default function Settings() {
 
         {/* HIDDEN: License tab removed from user interface */}
 
-        {/* REMOVED: Companies multi-management - using single company only */}
-
         <TabsContent value="company">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('settings.company')}</CardTitle>
-              <CardDescription>{t('settings.companyDescription')}</CardDescription>
-            </CardHeader>
+          <div className="space-y-6">
+            {/* Lista firm i zarządzanie wieloma firmami */}
+            <Card>
+              <CardHeader>
+                <CardTitle>🏢 {t('settings.companies.title')}</CardTitle>
+                <CardDescription>{t('settings.companies.description')}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CompanyManager />
+              </CardContent>
+            </Card>
+
+            {/* Formularz edycji aktualnej firmy */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('settings.company')}</CardTitle>
+                <CardDescription>{t('settings.companyDescription')}</CardDescription>
+              </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-4">
                 <div className="flex items-start gap-6">
@@ -624,6 +635,7 @@ export default function Settings() {
               </Button>
             </CardContent>
           </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="preferences">
