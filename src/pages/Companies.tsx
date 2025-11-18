@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Plus, Edit2, Trash2, Building2, Upload, Check } from 'lucide-react';
 import { Company } from '../types';
 import { useTranslation } from 'react-i18next';
+import { useCompanies } from '@/hooks/useElectronDB';
 import { LicenseManager } from '@/services/LicenseManager';
 import { UpgradeDialog } from '@/components/UpgradeDialog';
 import { toast } from 'sonner';
 
 export default function Companies() {
   const { t } = useTranslation();
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const { companies, loading, createCompany, updateCompany, deleteCompany, refetch } = useCompanies();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
@@ -35,43 +36,24 @@ export default function Companies() {
     default_vat_rate: 21,
   });
 
-  useEffect(() => {
-    loadCompanies();
-  }, []);
-
-  const loadCompanies = async () => {
-    // Load from localStorage for now
-    const stored = localStorage.getItem('companies');
-    if (stored) {
-      setCompanies(JSON.parse(stored));
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const now = new Date().toISOString();
-    if (editingId) {
-      const updated = companies.map(c => 
-        c.id === editingId 
-          ? { ...formData as Company, id: editingId, updated_at: now } 
-          : c
-      );
-      setCompanies(updated);
-      localStorage.setItem('companies', JSON.stringify(updated));
-    } else {
-      const newCompany: Company = {
-        ...formData as Company,
-        id: Date.now().toString(),
-        created_at: now,
-        updated_at: now,
-      };
-      const updated = [...companies, newCompany];
-      setCompanies(updated);
-      localStorage.setItem('companies', JSON.stringify(updated));
+    try {
+      if (editingId) {
+        await updateCompany(editingId, formData as Partial<Company>);
+        toast.success(t('company.updated') || 'Firma zaktualizowana!');
+      } else {
+        await createCompany(formData as Omit<Company, 'id'>);
+        toast.success(t('company.created') || 'Firma dodana!');
+      }
+      
+      resetForm();
+      await refetch();
+    } catch (error: any) {
+      console.error('Error saving company:', error);
+      toast.error('Błąd: ' + error.message);
     }
-    
-    resetForm();
   };
 
   const handleEdit = (company: Company) => {
@@ -82,9 +64,14 @@ export default function Companies() {
 
   const handleDelete = async (id: string) => {
     if (confirm(t('company.confirmDelete') || 'Verwijder bedrijf?')) {
-      const updated = companies.filter(c => c.id !== id);
-      setCompanies(updated);
-      localStorage.setItem('companies', JSON.stringify(updated));
+      try {
+        await deleteCompany(id);
+        toast.success(t('company.deleted') || 'Firma usunięta!');
+        await refetch();
+      } catch (error: any) {
+        console.error('Error deleting company:', error);
+        toast.error('Błąd: ' + error.message);
+      }
     }
   };
 
