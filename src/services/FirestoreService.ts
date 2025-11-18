@@ -22,12 +22,20 @@ import {
 import { db } from '@/config/firebase';
 import type { Invoice, Client, Company, Product, Expense, Timesheet, Appointment } from '@/types';
 
+// Helper function to ensure db is initialized
+function getDb() {
+  if (!db) {
+    throw new Error('Firebase not initialized. Please check your Firebase configuration.');
+  }
+  return db;
+}
+
 export class FirestoreService {
   // ==================== INVOICES ====================
   
   static async getInvoices(userId: string): Promise<Invoice[]> {
     try {
-      const invoicesRef = collection(db, `users/${userId}/invoices`);
+      const invoicesRef = collection(getDb(), `users/${userId}/invoices`);
       const snapshot = await getDocs(invoicesRef);
       return snapshot.docs.map(doc => ({ 
         id: doc.id, 
@@ -41,7 +49,7 @@ export class FirestoreService {
 
   static async createInvoice(userId: string, invoice: Omit<Invoice, 'id'>): Promise<string> {
     try {
-      const invoicesRef = collection(db, `users/${userId}/invoices`);
+      const invoicesRef = collection(getDb(), `users/${userId}/invoices`);
       const docRef = await addDoc(invoicesRef, {
         ...invoice,
         created_at: Timestamp.now(),
@@ -56,7 +64,7 @@ export class FirestoreService {
 
   static async updateInvoice(userId: string, invoiceId: string, data: Partial<Invoice>): Promise<void> {
     try {
-      const invoiceRef = doc(db, `users/${userId}/invoices`, invoiceId);
+      const invoiceRef = doc(getDb(), `users/${userId}/invoices`, invoiceId);
       await updateDoc(invoiceRef, {
         ...data,
         updated_at: Timestamp.now()
@@ -69,7 +77,7 @@ export class FirestoreService {
 
   static async deleteInvoice(userId: string, invoiceId: string): Promise<void> {
     try {
-      const invoiceRef = doc(db, `users/${userId}/invoices`, invoiceId);
+      const invoiceRef = doc(getDb(), `users/${userId}/invoices`, invoiceId);
       await deleteDoc(invoiceRef);
     } catch (error) {
       console.error('Error deleting invoice:', error);
@@ -81,7 +89,7 @@ export class FirestoreService {
   
   static async getClients(userId: string): Promise<Client[]> {
     try {
-      const clientsRef = collection(db, `users/${userId}/clients`);
+      const clientsRef = collection(getDb(), `users/${userId}/clients`);
       const snapshot = await getDocs(clientsRef);
       return snapshot.docs.map(doc => ({ 
         id: doc.id, 
@@ -95,7 +103,7 @@ export class FirestoreService {
 
   static async createClient(userId: string, client: Omit<Client, 'id'>): Promise<string> {
     try {
-      const clientsRef = collection(db, `users/${userId}/clients`);
+      const clientsRef = collection(getDb(), `users/${userId}/clients`);
       const docRef = await addDoc(clientsRef, {
         ...client,
         created_at: Timestamp.now()
@@ -109,7 +117,7 @@ export class FirestoreService {
 
   static async updateClient(userId: string, clientId: string, data: Partial<Client>): Promise<void> {
     try {
-      const clientRef = doc(db, `users/${userId}/clients`, clientId);
+      const clientRef = doc(getDb(), `users/${userId}/clients`, clientId);
       await updateDoc(clientRef, data);
     } catch (error) {
       console.error('Error updating client:', error);
@@ -119,7 +127,7 @@ export class FirestoreService {
 
   static async deleteClient(userId: string, clientId: string): Promise<void> {
     try {
-      const clientRef = doc(db, `users/${userId}/clients`, clientId);
+      const clientRef = doc(getDb(), `users/${userId}/clients`, clientId);
       await deleteDoc(clientRef);
     } catch (error) {
       console.error('Error deleting client:', error);
@@ -131,7 +139,7 @@ export class FirestoreService {
   
   static async getCompany(userId: string): Promise<Company | null> {
     try {
-      const companyRef = doc(db, `users/${userId}/company`, 'default');
+      const companyRef = doc(getDb(), `users/${userId}/company`, 'default');
       const snapshot = await getDoc(companyRef);
       if (snapshot.exists()) {
         return { id: snapshot.id, ...snapshot.data() } as Company;
@@ -145,7 +153,7 @@ export class FirestoreService {
 
   static async updateCompany(userId: string, data: Partial<Company>): Promise<void> {
     try {
-      const companyRef = doc(db, `users/${userId}/company`, 'default');
+      const companyRef = doc(getDb(), `users/${userId}/company`, 'default');
       // Użyj setDoc z merge, żeby utworzyć dokument jeśli nie istnieje
       await setDoc(companyRef, data, { merge: true });
     } catch (error) {
@@ -156,7 +164,7 @@ export class FirestoreService {
 
   static async createCompany(userId: string, company: Omit<Company, 'id'>): Promise<void> {
     try {
-      const companyRef = doc(db, `users/${userId}/company`, 'default');
+      const companyRef = doc(getDb(), `users/${userId}/company`, 'default');
       await setDoc(companyRef, company);
     } catch (error) {
       console.error('Error creating company:', error);
@@ -168,7 +176,7 @@ export class FirestoreService {
   
   static async getProducts(userId: string): Promise<Product[]> {
     try {
-      const productsRef = collection(db, `users/${userId}/products`);
+      const productsRef = collection(getDb(), `users/${userId}/products`);
       const snapshot = await getDocs(productsRef);
       return snapshot.docs.map(doc => ({ 
         id: doc.id, 
@@ -182,7 +190,7 @@ export class FirestoreService {
 
   static async createProduct(userId: string, product: Omit<Product, 'id'>): Promise<string> {
     try {
-      const productsRef = collection(db, `users/${userId}/products`);
+      const productsRef = collection(getDb(), `users/${userId}/products`);
       const docRef = await addDoc(productsRef, product);
       return docRef.id;
     } catch (error) {
@@ -193,7 +201,7 @@ export class FirestoreService {
 
   static async updateProduct(userId: string, productId: string, data: Partial<Product>): Promise<void> {
     try {
-      const productRef = doc(db, `users/${userId}/products`, productId);
+      const productRef = doc(getDb(), `users/${userId}/products`, productId);
       await updateDoc(productRef, data);
     } catch (error) {
       console.error('Error updating product:', error);
@@ -203,7 +211,7 @@ export class FirestoreService {
 
   static async deleteProduct(userId: string, productId: string): Promise<void> {
     try {
-      const productRef = doc(db, `users/${userId}/products`, productId);
+      const productRef = doc(getDb(), `users/${userId}/products`, productId);
       await deleteDoc(productRef);
     } catch (error) {
       console.error('Error deleting product:', error);
@@ -215,7 +223,7 @@ export class FirestoreService {
   
   static async getExpenses(userId: string): Promise<Expense[]> {
     try {
-      const expensesRef = collection(db, `users/${userId}/expenses`);
+      const expensesRef = collection(getDb(), `users/${userId}/expenses`);
       const snapshot = await getDocs(expensesRef);
       return snapshot.docs.map(doc => ({ 
         id: doc.id, 
@@ -229,7 +237,7 @@ export class FirestoreService {
 
   static async createExpense(userId: string, expense: Omit<Expense, 'id'>): Promise<string> {
     try {
-      const expensesRef = collection(db, `users/${userId}/expenses`);
+      const expensesRef = collection(getDb(), `users/${userId}/expenses`);
       const docRef = await addDoc(expensesRef, expense);
       return docRef.id;
     } catch (error) {
@@ -240,7 +248,7 @@ export class FirestoreService {
 
   static async updateExpense(userId: string, expenseId: string, data: Partial<Expense>): Promise<void> {
     try {
-      const expenseRef = doc(db, `users/${userId}/expenses`, expenseId);
+      const expenseRef = doc(getDb(), `users/${userId}/expenses`, expenseId);
       await updateDoc(expenseRef, data);
     } catch (error) {
       console.error('Error updating expense:', error);
@@ -250,7 +258,7 @@ export class FirestoreService {
 
   static async deleteExpense(userId: string, expenseId: string): Promise<void> {
     try {
-      const expenseRef = doc(db, `users/${userId}/expenses`, expenseId);
+      const expenseRef = doc(getDb(), `users/${userId}/expenses`, expenseId);
       await deleteDoc(expenseRef);
     } catch (error) {
       console.error('Error deleting expense:', error);
@@ -262,7 +270,7 @@ export class FirestoreService {
   
   static async getTimesheets(userId: string): Promise<Timesheet[]> {
     try {
-      const timesheetsRef = collection(db, `users/${userId}/timesheets`);
+      const timesheetsRef = collection(getDb(), `users/${userId}/timesheets`);
       const snapshot = await getDocs(timesheetsRef);
       return snapshot.docs.map(doc => ({ 
         id: doc.id, 
@@ -276,7 +284,7 @@ export class FirestoreService {
 
   static async createTimesheet(userId: string, timesheet: Omit<Timesheet, 'id'>): Promise<string> {
     try {
-      const timesheetsRef = collection(db, `users/${userId}/timesheets`);
+      const timesheetsRef = collection(getDb(), `users/${userId}/timesheets`);
       const docRef = await addDoc(timesheetsRef, timesheet);
       return docRef.id;
     } catch (error) {
@@ -287,7 +295,7 @@ export class FirestoreService {
 
   static async updateTimesheet(userId: string, timesheetId: string, data: Partial<Timesheet>): Promise<void> {
     try {
-      const timesheetRef = doc(db, `users/${userId}/timesheets`, timesheetId);
+      const timesheetRef = doc(getDb(), `users/${userId}/timesheets`, timesheetId);
       await updateDoc(timesheetRef, data);
     } catch (error) {
       console.error('Error updating timesheet:', error);
@@ -297,7 +305,7 @@ export class FirestoreService {
 
   static async deleteTimesheet(userId: string, timesheetId: string): Promise<void> {
     try {
-      const timesheetRef = doc(db, `users/${userId}/timesheets`, timesheetId);
+      const timesheetRef = doc(getDb(), `users/${userId}/timesheets`, timesheetId);
       await deleteDoc(timesheetRef);
     } catch (error) {
       console.error('Error deleting timesheet:', error);
@@ -309,7 +317,7 @@ export class FirestoreService {
   
   static async getAppointments(userId: string): Promise<Appointment[]> {
     try {
-      const appointmentsRef = collection(db, `users/${userId}/appointments`);
+      const appointmentsRef = collection(getDb(), `users/${userId}/appointments`);
       const snapshot = await getDocs(appointmentsRef);
       return snapshot.docs.map(doc => ({ 
         id: doc.id, 
@@ -323,7 +331,7 @@ export class FirestoreService {
 
   static async createAppointment(userId: string, appointment: Omit<Appointment, 'id'>): Promise<string> {
     try {
-      const appointmentsRef = collection(db, `users/${userId}/appointments`);
+      const appointmentsRef = collection(getDb(), `users/${userId}/appointments`);
       const docRef = await addDoc(appointmentsRef, appointment);
       return docRef.id;
     } catch (error) {
@@ -334,7 +342,7 @@ export class FirestoreService {
 
   static async updateAppointment(userId: string, appointmentId: string, data: Partial<Appointment>): Promise<void> {
     try {
-      const appointmentRef = doc(db, `users/${userId}/appointments`, appointmentId);
+      const appointmentRef = doc(getDb(), `users/${userId}/appointments`, appointmentId);
       await updateDoc(appointmentRef, data);
     } catch (error) {
       console.error('Error updating appointment:', error);
@@ -344,7 +352,7 @@ export class FirestoreService {
 
   static async deleteAppointment(userId: string, appointmentId: string): Promise<void> {
     try {
-      const appointmentRef = doc(db, `users/${userId}/appointments`, appointmentId);
+      const appointmentRef = doc(getDb(), `users/${userId}/appointments`, appointmentId);
       await deleteDoc(appointmentRef);
     } catch (error) {
       console.error('Error deleting appointment:', error);
@@ -360,13 +368,13 @@ export class FirestoreService {
    */
   static async migrateFromLocalStorage(userId: string): Promise<void> {
     try {
-      const batch = writeBatch(db);
+      const batch = writeBatch(getDb());
       
       // Migruj faktury
       const invoicesLocal = localStorage.getItem('invoices');
       if (invoicesLocal) {
         const invoices = JSON.parse(invoicesLocal);
-        const invoicesRef = collection(db, `users/${userId}/invoices`);
+        const invoicesRef = collection(getDb(), `users/${userId}/invoices`);
         invoices.forEach((invoice: Invoice) => {
           const { id, ...data } = invoice;
           const docRef = doc(invoicesRef, id);
@@ -378,7 +386,7 @@ export class FirestoreService {
       const clientsLocal = localStorage.getItem('clients');
       if (clientsLocal) {
         const clients = JSON.parse(clientsLocal);
-        const clientsRef = collection(db, `users/${userId}/clients`);
+        const clientsRef = collection(getDb(), `users/${userId}/clients`);
         clients.forEach((client: Client) => {
           const { id, ...data } = client;
           const docRef = doc(clientsRef, id);
@@ -390,7 +398,7 @@ export class FirestoreService {
       const productsLocal = localStorage.getItem('products');
       if (productsLocal) {
         const products = JSON.parse(productsLocal);
-        const productsRef = collection(db, `users/${userId}/products`);
+        const productsRef = collection(getDb(), `users/${userId}/products`);
         products.forEach((product: Product) => {
           const { id, ...data } = product;
           const docRef = doc(productsRef, id);

@@ -53,12 +53,13 @@ export default function InvoiceForm({ onNavigate, editInvoiceId }: InvoiceFormPr
   const [notes, setNotes] = useState('');
   const [currency, setCurrency] = useState('EUR');
   const [language, setLanguage] = useState('nl');
-  const [lines, setLines] = useState<Array<Partial<InvoiceLine>>>([
+  const [lines, setLines] = useState<Array<Partial<InvoiceLine> & { priceIncludesVat?: boolean }>>([
     {
       description: '',
       quantity: 1,
       unit_price: 0,
       vat_rate: company?.default_vat_rate || 21,
+      priceIncludesVat: false,
     },
   ]);
 
@@ -113,6 +114,7 @@ export default function InvoiceForm({ onNavigate, editInvoiceId }: InvoiceFormPr
             quantity: line.quantity,
             unit_price: line.unit_price,
             vat_rate: line.vat_rate,
+            priceIncludesVat: false,
           })));
         }
         
@@ -134,7 +136,14 @@ export default function InvoiceForm({ onNavigate, editInvoiceId }: InvoiceFormPr
     const validLines = lines.filter(l => l.description && l.quantity && l.unit_price !== undefined && l.vat_rate !== undefined);
     const calculatedLines = validLines.map(l => {
       const actualVatRate = reverseCharge ? 0 : (l.vat_rate || 0);
-      const { lineNet, lineVat, lineGross } = calculateLineTotals(l.quantity!, l.unit_price!, actualVatRate);
+      let unitPriceNet = l.unit_price!;
+      
+      // Jeśli cena zawiera VAT, przelicz na netto
+      if (l.priceIncludesVat) {
+        unitPriceNet = l.unit_price! / (1 + actualVatRate / 100);
+      }
+      
+      const { lineNet, lineVat, lineGross } = calculateLineTotals(l.quantity!, unitPriceNet, actualVatRate);
       return { line_net: lineNet, line_vat: lineVat, line_gross: lineGross };
     });
     return calculateInvoiceTotals(calculatedLines);
@@ -148,6 +157,7 @@ export default function InvoiceForm({ onNavigate, editInvoiceId }: InvoiceFormPr
         quantity: 1,
         unit_price: 0,
         vat_rate: company?.default_vat_rate || 21,
+        priceIncludesVat: false,
       },
     ]);
   };
@@ -682,8 +692,64 @@ export default function InvoiceForm({ onNavigate, editInvoiceId }: InvoiceFormPr
                       </Select>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>Prijs p.e. / Price excl. VAT (EUR) *</Label>
+                    <div className="space-y-2 md:col-span-2">
+                      <div className="flex items-center gap-4 mb-2">
+                        <Label>Cena / Price *</Label>
+                        <div className="flex items-center gap-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newLines = [...lines];
+                              const currentPrice = newLines[index].unit_price || 0;
+                              const vatRate = reverseCharge ? 0 : (newLines[index].vat_rate || 0);
+                              
+                              if (!newLines[index].priceIncludesVat) {
+                                // Zmiana z netto na brutto - dodaj VAT
+                                newLines[index].unit_price = currentPrice * (1 + vatRate / 100);
+                              } else {
+                                // Zmiana z brutto na netto - odejmij VAT
+                                newLines[index].unit_price = currentPrice / (1 + vatRate / 100);
+                              }
+                              
+                              newLines[index].priceIncludesVat = !newLines[index].priceIncludesVat;
+                              setLines(newLines);
+                            }}
+                            className={`px-3 py-1 rounded-l-md border transition-colors ${
+                              !line.priceIncludesVat
+                                ? 'bg-blue-500 text-white border-blue-500'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600'
+                            }`}
+                          >
+                            Netto (bez VAT)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newLines = [...lines];
+                              const currentPrice = newLines[index].unit_price || 0;
+                              const vatRate = reverseCharge ? 0 : (newLines[index].vat_rate || 0);
+                              
+                              if (!newLines[index].priceIncludesVat) {
+                                // Zmiana z netto na brutto - dodaj VAT
+                                newLines[index].unit_price = currentPrice * (1 + vatRate / 100);
+                              } else {
+                                // Zmiana z brutto na netto - odejmij VAT
+                                newLines[index].unit_price = currentPrice / (1 + vatRate / 100);
+                              }
+                              
+                              newLines[index].priceIncludesVat = !newLines[index].priceIncludesVat;
+                              setLines(newLines);
+                            }}
+                            className={`px-3 py-1 rounded-r-md border transition-colors ${
+                              line.priceIncludesVat
+                                ? 'bg-blue-500 text-white border-blue-500'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600'
+                            }`}
+                          >
+                            Brutto (z VAT)
+                          </button>
+                        </div>
+                      </div>
                       <Input
                         type="number"
                         step="0.01"
@@ -691,6 +757,13 @@ export default function InvoiceForm({ onNavigate, editInvoiceId }: InvoiceFormPr
                         value={line.unit_price || 0}
                         onChange={(e) => handleLineChange(index, 'unit_price', parseFloat(e.target.value) || 0)}
                       />
+                      <p className="text-xs text-muted-foreground">
+                        {line.priceIncludesVat ? (
+                          <>💡 Cena zawiera VAT ({line.vat_rate}%). System automatycznie obliczy cenę netto.</>
+                        ) : (
+                          <>💡 Cena bez VAT. System automatycznie doda {line.vat_rate}% VAT.</>
+                        )}
+                      </p>
                     </div>
 
                     <div className="space-y-2">

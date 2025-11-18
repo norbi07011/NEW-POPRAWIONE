@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Firebase Connection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔥 Test Firebase Connection</h1>
+    <div id="results"></div>
+    
+    <h2>Testy:</h2>
+    <button onclick="testAuth()">Test Authentication</button>
+    <button onclick="testFirestore()">Test Firestore</button>
+    <button onclick="testWrite()">Test Write to Firestore</button>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, collection, addDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0KzCniUt_NYRYaefG7bUQZ4AqvO7dMUk",
+            authDomain: "messu-bouw-management-system.firebaseapp.com",
+            projectId: "messu-bouw-management-system",
+            storageBucket: "messu-bouw-management-system.firebasestorage.app",
+            messagingSenderId: "988554164944",
+            appId: "1:988554164944:web:acf82fcd8c987364d6fcd5"
+        };
+
+        let app, auth, db;
+        const results = document.getElementById('results');
+
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+
+        // Initialize Firebase
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            addResult('✅ Firebase zainicjalizowany poprawnie', 'success');
+        } catch (error) {
+            addResult('❌ Błąd inicjalizacji Firebase: ' + error.message, 'error');
+        }
+
+        window.testAuth = async function() {
+            try {
+                addResult('🔄 Testowanie Authentication...', 'info');
+                const userCredential = await signInAnonymously(auth);
+                addResult('✅ Authentication działa! User ID: ' + userCredential.user.uid, 'success');
+            } catch (error) {
+                addResult('❌ Błąd Authentication: ' + error.message, 'error');
+            }
+        }
+
+        window.testFirestore = async function() {
+            try {
+                addResult('🔄 Testowanie Firestore...', 'info');
+                const testRef = collection(db, 'test');
+                addResult('✅ Połączenie z Firestore OK!', 'success');
+            } catch (error) {
+                addResult('❌ Błąd Firestore: ' + error.message, 'error');
+            }
+        }
+
+        window.testWrite = async function() {
+            try {
+                addResult('🔄 Testowanie zapisu do Firestore...', 'info');
+                
+                // Najpierw zaloguj anonimowo
+                const userCredential = await signInAnonymously(auth);
+                const userId = userCredential.user.uid;
+                
+                // Spróbuj zapisać testowy dokument
+                const testData = {
+                    message: 'Test z ' + new Date().toLocaleString(),
+                    timestamp: new Date().toISOString()
+                };
+                
+                const docRef = await addDoc(collection(db, `users/${userId}/test`), testData);
+                addResult('✅ Zapis do Firestore OK! Doc ID: ' + docRef.id, 'success');
+                
+                // Spróbuj odczytać
+                const querySnapshot = await getDocs(collection(db, `users/${userId}/test`));
+                addResult('✅ Odczyt z Firestore OK! Znaleziono ' + querySnapshot.size + ' dokumentów', 'success');
+                
+            } catch (error) {
+                addResult('❌ Błąd zapisu/odczytu: ' + error.message + ' (Code: ' + error.code + ')', 'error');
+                console.error('Full error:', error);
+            }
+        }
+
+        // Auto-run basic tests
+        addResult('🔍 Sprawdzanie konfiguracji...', 'info');
+        addResult('Project ID: ' + firebaseConfig.projectId, 'info');
+        addResult('Auth Domain: ' + firebaseConfig.authDomain, 'info');
+    </script>
+</body>
+</html>

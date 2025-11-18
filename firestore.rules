@@ -1,0 +1,26 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Funkcja pomocnicza do weryfikacji użytkownika
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Wszystkie dane użytkownika w users/{userId}/...
+    match /users/{userId}/{document=**} {
+      // Użytkownik może czytać, pisać, aktualizować i usuwać tylko swoje dane
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Blokuj dostęp do wszystkich innych dokumentów
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

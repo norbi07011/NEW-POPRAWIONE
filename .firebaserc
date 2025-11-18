@@ -1,0 +1,11 @@
+# Firebase cache
+.firebase/
+
+# Firebase config - KEEP this in git (it's public)
+# firebase.json
+# firestore.rules
+
+# Local Firebase emulator data
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
