@@ -17,9 +17,9 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// TODO: Wypełnij swoimi danymi z Supabase Dashboard
-const supabaseUrl = process.env.VITE_SUPABASE_URL || 'YOUR_SUPABASE_URL';
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
+// Supabase configuration - messu system apk
+const supabaseUrl = 'https://ayinverqjntywglsdlzo.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5aW52ZXJxam50eXdnbHNkbHpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0NjIyNTcsImV4cCI6MjA3OTAzODI1N30.RPVXzgZraHaJJTXI2OeKTN0cQTqX1knCl2aMMeD5ugc';
 
 // Utwórz klienta Supabase
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
