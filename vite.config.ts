@@ -27,7 +27,15 @@ export default defineConfig({
     host: true, // Umożliwia dostęp z innych urządzeń w sieci
   },
   optimizeDeps: {
-    exclude: ['@supabase/supabase-js'],
-    force: true
+    include: ['@supabase/supabase-js'],
+    esbuildOptions: {
+      target: 'esnext'
+    }
+  },
+  build: {
+    target: 'esnext',
+    commonjsOptions: {
+      transformMixedEsModules: true
+    }
   }
 });
