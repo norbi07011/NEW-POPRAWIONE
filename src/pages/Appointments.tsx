@@ -810,10 +810,10 @@ export default function Appointments() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingAppointment ? 'Edytuj spotkanie' : 'Nowe spotkanie'}
+              {editingAppointment ? t('appointments.editAppointment') : t('appointments.newAppointment')}
             </DialogTitle>
             <DialogDescription>
-              Uzupełnij szczegóły spotkania
+              {t('appointments.completeDetails')}
             </DialogDescription>
           </DialogHeader>
 
@@ -842,7 +842,7 @@ export default function Appointments() {
                   className="gap-2"
                 >
                   <Plus size={16} />
-                  Dodaj klienta
+                  {t('appointments.addClient')}
                 </Button>
               </div>
               <Select 
@@ -876,7 +876,7 @@ export default function Appointments() {
                 />
               </div>
               <div>
-                <Label htmlFor="time">Godzina *</Label>
+                <Label htmlFor="time">{t('appointments.time')} *</Label>
                 <Input
                   id="time"
                   type="time"
@@ -901,10 +901,10 @@ export default function Appointments() {
                   <SelectItem value="15">{t('appointments.minutes15')}</SelectItem>
                   <SelectItem value="30">{t('appointments.minutes30')}</SelectItem>
                   <SelectItem value="45">{t('appointments.minutes45')}</SelectItem>
-                  <SelectItem value="60">1 godzina</SelectItem>
-                  <SelectItem value="90">1.5 godziny</SelectItem>
-                  <SelectItem value="120">2 godziny</SelectItem>
-                  <SelectItem value="180">3 godziny</SelectItem>
+                  <SelectItem value="60">{t('appointments.hour1')}</SelectItem>
+                  <SelectItem value="90">{t('appointments.hour1_5')}</SelectItem>
+                  <SelectItem value="120">{t('appointments.hour2')}</SelectItem>
+                  <SelectItem value="180">{t('appointments.hour3')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -912,7 +912,7 @@ export default function Appointments() {
             {/* Lokalizacja z mapą */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Label htmlFor="location">Lokalizacja</Label>
+                <Label htmlFor="location">{t('appointments.location')}</Label>
                 <Button
                   type="button"
                   size="sm"
@@ -935,7 +935,7 @@ export default function Appointments() {
                     geocodeAddress(e.target.value);
                   }
                 }}
-                placeholder="np. Biuro klienta, Online, Kawiarnia XYZ lub kliknij na mapie"
+                placeholder={t('appointments.locationPlaceholder')}
               />
 
               {/* Wbudowana mapa Google */}
@@ -976,7 +976,7 @@ export default function Appointments() {
                               const lng = position.coords.longitude;
                               setMapCenter({ lat, lng });
                               reverseGeocode(lat, lng);
-                              toast.success('Lokalizacja ustawiona na Twoją pozycję');
+                              toast.success(t('appointments.locationSet'));
                             },
                             () => {
                               toast.error('Nie można pobrać lokalizacji');
@@ -1045,11 +1045,11 @@ export default function Appointments() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="0">{t('appointments.noReminder')}</SelectItem>
-                  <SelectItem value="10">10 minut przed</SelectItem>
-                  <SelectItem value="15">15 minut przed</SelectItem>
-                  <SelectItem value="30">30 minut przed</SelectItem>
-                  <SelectItem value="60">1 godzinę przed</SelectItem>
-                  <SelectItem value="120">2 godziny przed</SelectItem>
+                  <SelectItem value="10">{t('appointments.minutesBefore10')}</SelectItem>
+                  <SelectItem value="15">{t('appointments.minutesBefore15')}</SelectItem>
+                  <SelectItem value="30">{t('appointments.minutesBefore30')}</SelectItem>
+                  <SelectItem value="60">{t('appointments.hourBefore1')}</SelectItem>
+                  <SelectItem value="120">{t('appointments.hoursBefore2')}</SelectItem>
                   <SelectItem value="1440">{t('appointments.dayBefore1')}</SelectItem>
                 </SelectContent>
               </Select>
@@ -1219,71 +1219,71 @@ export default function Appointments() {
       <Dialog open={isClientDialogOpen} onOpenChange={setIsClientDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Dodaj nowego klienta</DialogTitle>
+            <DialogTitle>{t('appointments.addNewClient')}</DialogTitle>
             <DialogDescription>
-              Uzupełnij dane nowego klienta. Po zapisaniu zostanie automatycznie wybrany w spotkaniu.
+              {t('appointments.clientAutoSelected')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="new_client_name">
-                Nazwa <span className="text-red-500">*</span>
+                {t('appointments.clientNameRequired')}
               </Label>
               <Input
                 id="new_client_name"
                 value={newClientData.name}
                 onChange={(e) => setNewClientData({ ...newClientData, name: e.target.value })}
-                placeholder="Nazwa klienta lub firmy"
+                placeholder={t('appointments.clientNamePlaceholder')}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="new_client_email">Email</Label>
+              <Label htmlFor="new_client_email">{t('appointments.clientEmail')}</Label>
               <Input
                 id="new_client_email"
                 type="email"
                 value={newClientData.email}
                 onChange={(e) => setNewClientData({ ...newClientData, email: e.target.value })}
-                placeholder="email@example.com"
+                placeholder={t('appointments.clientEmailPlaceholder')}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="new_client_phone">Telefon</Label>
+              <Label htmlFor="new_client_phone">{t('appointments.clientPhone')}</Label>
               <Input
                 id="new_client_phone"
                 value={newClientData.phone}
                 onChange={(e) => setNewClientData({ ...newClientData, phone: e.target.value })}
-                placeholder="+31 6 12345678"
+                placeholder={t('appointments.clientPhonePlaceholder')}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="new_client_address">Adres</Label>
+              <Label htmlFor="new_client_address">{t('appointments.clientAddress')}</Label>
               <Textarea
                 id="new_client_address"
                 value={newClientData.address}
                 onChange={(e) => setNewClientData({ ...newClientData, address: e.target.value })}
-                placeholder="Ulica, miasto, kod pocztowy"
+                placeholder={t('appointments.clientAddressPlaceholder')}
                 rows={2}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="new_client_country">Kraj</Label>
+              <Label htmlFor="new_client_country">{t('appointments.clientCountry')}</Label>
               <Select
                 value={newClientData.country}
                 onValueChange={(value) => setNewClientData({ ...newClientData, country: value })}
               >
                 <SelectTrigger id="new_client_country">
-                  <SelectValue placeholder="Wybierz kraj" />
+                  <SelectValue placeholder={t('appointments.clientCountryPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="NL">Holandia</SelectItem>
-                  <SelectItem value="PL">Polska</SelectItem>
-                  <SelectItem value="DE">Niemcy</SelectItem>
-                  <SelectItem value="BE">Belgia</SelectItem>
+                  <SelectItem value="NL">{t('appointments.countryNL')}</SelectItem>
+                  <SelectItem value="PL">{t('appointments.countryPL')}</SelectItem>
+                  <SelectItem value="DE">{t('appointments.countryDE')}</SelectItem>
+                  <SelectItem value="BE">{t('appointments.countryBE')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="new_client_type">Typ klienta</Label>
+              <Label htmlFor="new_client_type">{t('appointments.clientType')}</Label>
               <Select
                 value={newClientData.client_type}
                 onValueChange={(value: 'individual' | 'company') => 
@@ -1291,22 +1291,22 @@ export default function Appointments() {
                 }
               >
                 <SelectTrigger id="new_client_type">
-                  <SelectValue placeholder="Wybierz typ" />
+                  <SelectValue placeholder={t('appointments.clientTypePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="individual">Osoba prywatna</SelectItem>
-                  <SelectItem value="company">Firma</SelectItem>
+                  <SelectItem value="individual">{t('appointments.clientTypeIndividual')}</SelectItem>
+                  <SelectItem value="company">{t('appointments.clientTypeCompany')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsClientDialogOpen(false)}>
-              Anuluj
+              {t('appointments.cancel')}
             </Button>
             <Button type="button" onClick={handleSaveNewClient}>
               <Check className="w-4 h-4 mr-2" />
-              Zapisz klienta
+              {t('appointments.saveClient')}
             </Button>
           </DialogFooter>
         </DialogContent>
