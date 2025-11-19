@@ -118,14 +118,14 @@ export default function Products() {
           {/* PRAWA STRONA: Tekst i przyciski */}
           <div className="flex flex-col justify-center px-4 md:px-6 lg:px-8">
             <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-black mb-3 md:mb-4 tracking-tight">
-              📦 Produkty/Usługi
+              📦 Producten/Diensten
             </h1>
             <p className="text-xl lg:text-2xl text-black mb-8 font-medium">
-              Katalog produktów i usług
+              Catalogus van producten en diensten
             </p>
             <button onClick={() => handleOpenDialog()} className="px-10 py-5 bg-linear-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-2xl font-black text-lg shadow-2xl transition-all duration-500 hover:scale-105 flex items-center gap-3 w-fit">
               <Plus size={24} weight="bold" />
-              Nowy produkt
+              Nieuw product
             </button>
           </div>
         </div>
@@ -137,7 +137,7 @@ export default function Products() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-black">{t('products.title')}</h2>
-                <p className="text-black">Zarządzaj katalogiem produktów i usług</p>
+                <p className="text-black">Beheer productcatalogus en diensten</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-xl">
                 <Package className="text-blue-700" size={24} />

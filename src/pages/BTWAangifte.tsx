@@ -347,11 +347,11 @@ export function BTWAangifte() {
             📊 BTW Aangifte
           </h1>
           <p className="text-lg md:text-xl lg:text-2xl text-black mb-6 md:mb-8 font-medium">
-            Deklaracja VAT dla Holandii
+            BTW-aangifte voor Nederland
           </p>
           <button onClick={handleNewDeclaration} className="px-10 py-5 bg-linear-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-2xl font-black text-lg shadow-2xl transition-all duration-500 hover:scale-105 flex items-center gap-3 w-fit">
             <PlusCircle size={24} weight="bold" />
-            Nowa deklaracja
+            Nieuwe aangifte
           </button>
         </div>
       </div>

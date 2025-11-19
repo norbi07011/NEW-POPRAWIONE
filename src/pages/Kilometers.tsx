@@ -553,10 +553,10 @@ export default function KilometersPage() {
           {/* PRAWA STRONA: Tekst i przyciski */}
           <div className="flex flex-col justify-center px-4 md:px-6 lg:px-8">
             <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-black mb-3 md:mb-4 tracking-tight">
-              🚗 Kilometry
+              🚗 Kilometers
             </h1>
-            <p className="text-lg md:text-xl lg:text-2xl text-black mb-6 md:mb-8 font-medium">
-              Rozliczenie kilometrów służbowych
+            <p className="text-xl lg:text-2xl text-black mb-8 font-medium">
+              Vergoeding zakelijke kilometers
             </p>
             <div className="flex flex-wrap gap-4">
               {entries.length > 0 && (

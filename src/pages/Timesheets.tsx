@@ -393,14 +393,14 @@ export function Timesheets() {
           {/* PRAWA STRONA: Tekst i przyciski */}
           <div className="flex flex-col justify-center px-4 md:px-6 lg:px-8">
             <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-black mb-3 md:mb-4 tracking-tight">
-              ⏰ Godziny Pracy
+              ⏰ Werkuren
             </h1>
             <p className="text-lg md:text-xl lg:text-2xl text-black mb-6 md:mb-8 font-medium">
-              Twórz profesjonalne karty czasu pracy
+              Maak professionele urenregistraties
             </p>
             <button onClick={createNewTimesheet} className="px-10 py-5 bg-linear-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-2xl font-black text-lg shadow-2xl transition-all duration-500 hover:scale-105 flex items-center gap-3 w-fit">
               <Plus size={24} weight="bold" />
-              Nowa Karta Pracy
+              Nieuwe Urenregistratie
             </button>
           </div>
         </div>
@@ -411,10 +411,10 @@ export function Timesheets() {
             <div className="col-span-full text-center py-16">
               <Clock size={64} className="mx-auto text-black mb-4" />
               <p className="text-black text-lg">
-                Brak zapisanych kart pracy
+                Geen opgeslagen urenregistraties
               </p>
               <p className="text-black text-sm mt-2">
-                Kliknij "Nowa Karta Pracy" aby rozpocząć
+                Klik op "Nieuwe Urenregistratie" om te beginnen
               </p>
             </div>
           ) : (

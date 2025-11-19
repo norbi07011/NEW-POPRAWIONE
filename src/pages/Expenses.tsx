@@ -468,10 +468,10 @@ export default function Expenses() {
           {/* PRAWA STRONA: Tekst i przyciski */}
           <div className="flex flex-col justify-center px-4 md:px-6 lg:px-8">
             <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-black mb-3 md:mb-4 tracking-tight">
-              💳 Wydatki
+              💳 Uitgaven
             </h1>
             <p className="text-xl lg:text-2xl text-black mb-8 font-medium">
-              Zarządzaj kosztami biznesowymi i rozliczaj VAT
+              Beheer zakelijke kosten en verantwoord BTW
             </p>
             <Dialog open={showDialog} onOpenChange={(open) => { setShowDialog(open); if (!open) resetForm(); }}>
               <DialogTrigger asChild>

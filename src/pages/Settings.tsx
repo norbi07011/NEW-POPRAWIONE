@@ -359,10 +359,10 @@ export default function Settings() {
         {/* PRAWA STRONA: Tekst */}
         <div className="flex flex-col justify-center px-4 md:px-6 lg:px-8">
           <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-black mb-3 md:mb-4 tracking-tight">
-            ⚙️ Ustawienia
+            ⚙️ Instellingen
           </h1>
           <p className="text-lg md:text-xl lg:text-2xl text-black mb-6 md:mb-8 font-medium">
-            Konfiguracja systemu i dane firmy
+            Systeemconfiguratie en bedrijfsgegevens
           </p>
         </div>
       </div>
