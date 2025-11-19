@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAudio } from '@/contexts/AudioContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ const CURRENT_RATES: KilometerRates = {
 };
 
 export default function KilometersPage() {
+  const { t } = useTranslation();
   const { isMuted } = useAudio();
   const { clients } = useClients();
   const { company } = useCompany();
@@ -580,7 +582,7 @@ export default function KilometersPage() {
               <Calculator className="w-6 h-6 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-black">
-              Aktualne stawki {CURRENT_RATES.year}
+              {t('kilometers.currentRates')} {CURRENT_RATES.year}
             </h2>
           </div>
           
@@ -589,7 +591,7 @@ export default function KilometersPage() {
               <div className="absolute inset-0 bg-linear-to-br from-white/10 to-transparent"></div>
               <div className="relative text-center">
                 <Car className="mx-auto mb-3 text-white" size={32} />
-                <div className="font-semibold text-blue-100">Auto służbowe</div>
+                <div className="font-semibold text-blue-100">{t('kilometers.carBusiness')}</div>
                 <div className="text-2xl font-bold">€{CURRENT_RATES.carBusinessRate}/km</div>
               </div>
               <div className="absolute -bottom-2 -right-2 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
@@ -599,7 +601,7 @@ export default function KilometersPage() {
               <div className="absolute inset-0 bg-linear-to-br from-white/10 to-transparent"></div>
               <div className="relative text-center">
                 <Car className="mx-auto mb-3 text-white" size={32} />
-                <div className="font-semibold text-gray-100">Auto prywatne</div>
+                <div className="font-semibold text-gray-100">{t('kilometers.carPrivate')}</div>
                 <div className="text-2xl font-bold">€{CURRENT_RATES.carCommutingRate}/km</div>
               </div>
               <div className="absolute -bottom-2 -right-2 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
@@ -609,7 +611,7 @@ export default function KilometersPage() {
               <div className="absolute inset-0 bg-linear-to-br from-white/10 to-transparent"></div>
               <div className="relative text-center">
                 <Bicycle className="mx-auto mb-3 text-white" size={32} />
-                <div className="font-semibold text-white">Rower</div>
+                <div className="font-semibold text-white">{t('kilometers.bike')}</div>
                 <div className="text-2xl font-bold">€{CURRENT_RATES.bikeRate}/km</div>
               </div>
               <div className="absolute -bottom-2 -right-2 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
@@ -619,7 +621,7 @@ export default function KilometersPage() {
               <div className="absolute inset-0 bg-linear-to-br from-white/10 to-transparent"></div>
               <div className="relative text-center">
                 <Motorcycle className="mx-auto mb-3 text-white" size={32} />
-                <div className="font-semibold text-white">Motor</div>
+                <div className="font-semibold text-white">{t('kilometers.motorcycle')}</div>
                 <div className="text-2xl font-bold">€{CURRENT_RATES.motorcycleRate}/km</div>
               </div>
               <div className="absolute -bottom-2 -right-2 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
@@ -632,11 +634,11 @@ export default function KilometersPage() {
                 <span className="text-sm">💡</span>
               </div>
               <span className="font-medium">
-                Limit belastingvrij: €{CURRENT_RATES.maxTaxFreeAmount} rocznie.
+                {t('kilometers.taxFreeLimit')}: €{CURRENT_RATES.maxTaxFreeAmount} rocznie.
               </span>
             </div>
             <p className="text-blue-700 text-sm mt-1 ml-7">
-              Powyżej tej kwoty konieczne jest zgłoszenie w rozliczeniu podatkowym.
+              {t('kilometers.aboveThisAmount')}
             </p>
           </div>
         </div>
@@ -648,7 +650,7 @@ export default function KilometersPage() {
               <FileText className="w-6 h-6 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-black">
-              Podsumowanie {new Date().getFullYear()}
+              {t('kilometers.summary')} {new Date().getFullYear()}
             </h2>
           </div>
           
@@ -657,7 +659,7 @@ export default function KilometersPage() {
               <div className="text-3xl font-bold text-blue-700 mb-2">
                 {yearlyReport.totalKilometers.toLocaleString()}
               </div>
-              <div className="text-blue-600 font-medium">Łączne kilometry</div>
+              <div className="text-blue-600 font-medium">{t('kilometers.totalKilometers')}</div>
               <div className="w-8 h-1 bg-blue-500 mx-auto mt-2 rounded-full"></div>
             </div>
             
@@ -665,7 +667,7 @@ export default function KilometersPage() {
               <div className="text-3xl font-bold text-blue-700 mb-2">
                 €{yearlyReport.totalAmount.toFixed(2)}
               </div>
-              <div className="text-blue-600 font-medium">Łączna kwota</div>
+              <div className="text-blue-600 font-medium">{t('kilometers.totalCost')}</div>
               <div className="w-8 h-1 bg-blue-500 mx-auto mt-2 rounded-full"></div>
             </div>
             
@@ -673,7 +675,7 @@ export default function KilometersPage() {
               <div className="text-3xl font-bold text-blue-700 mb-2">
                 €{yearlyReport.taxInfo.taxFreeAmount.toFixed(2)}
               </div>
-              <div className="text-blue-600 font-medium">Belastingvrij</div>
+              <div className="text-blue-600 font-medium">{t('kilometers.taxFree')}</div>
               <div className="w-8 h-1 bg-blue-500 mx-auto mt-2 rounded-full"></div>
             </div>
             
@@ -681,7 +683,7 @@ export default function KilometersPage() {
               <div className="text-3xl font-bold text-blue-700 mb-2">
                 €{yearlyReport.taxInfo.taxableAmount.toFixed(2)}
               </div>
-              <div className="text-blue-600 font-medium">Do opodatkowania</div>
+              <div className="text-blue-600 font-medium">{t('kilometers.taxable')}</div>
               <div className="w-8 h-1 bg-blue-500 mx-auto mt-2 rounded-full"></div>
             </div>
           </div>
@@ -693,11 +695,11 @@ export default function KilometersPage() {
                   <span className="text-sm">⚠️</span>
                 </div>
                 <span className="font-medium">
-                  Przekroczono limit belastingvrij!
+                  {t('kilometers.exceedsLimit')}
                 </span>
               </div>
               <p className="text-blue-700 text-sm mt-1 ml-7">
-                Kwota €{yearlyReport.taxInfo.taxableAmount.toFixed(2)} musi być zgłoszona w rozliczeniu podatkowym.
+                {t('kilometers.mustReport').replace('{amount}', yearlyReport.taxInfo.taxableAmount.toFixed(2))}
               </p>
             </div>
           )}
@@ -892,7 +894,7 @@ export default function KilometersPage() {
             <div className="p-3 bg-linear-to-r from-sky-500 to-blue-600 rounded-xl shadow-lg">
               <FileText className="w-6 h-6 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-800">Historia przejazdów</h2>
+            <h2 className="text-2xl font-bold text-gray-800">{t('kilometers.tripHistory')}</h2>
           </div>
           
           {entries.length === 0 ? (
@@ -900,8 +902,8 @@ export default function KilometersPage() {
               <div className="w-24 h-24 mx-auto mb-4 bg-linear-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
                 <Car className="w-12 h-12 text-gray-400" />
               </div>
-              <h3 className="text-lg font-semibold text-black mb-2">Brak przejazdów</h3>
-              <p className="text-black">Dodaj pierwszy przejazd służbowy, aby rozpocząć śledzenie kosztów.</p>
+              <h3 className="text-lg font-semibold text-black mb-2">{t('kilometers.noTripsYet')}</h3>
+              <p className="text-black">{t('kilometers.noTripsMessage')}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">

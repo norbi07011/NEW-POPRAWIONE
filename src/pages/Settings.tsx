@@ -682,32 +682,32 @@ export default function Settings() {
 
               {/* Decimal Separator */}
               <div className="space-y-2">
-                <Label htmlFor="decimalSeparator">Separator dziesiętny</Label>
+                <Label htmlFor="decimalSeparator">{t('settings.account.decimalSeparator')}</Label>
                 <Select 
                   value={localStorage.getItem('decimalSeparator') || 'comma'}
                   onValueChange={(value) => {
                     localStorage.setItem('decimalSeparator', value);
-                    toast.success('Separator zapisany');
+                    toast.success(t('settings.account.decimalSeparatorSaved'));
                   }}
                 >
                   <SelectTrigger id="decimalSeparator">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="comma">Przecinek (1.234,56)</SelectItem>
-                    <SelectItem value="period">Kropka (1,234.56)</SelectItem>
+                    <SelectItem value="comma">{t('settings.account.comma')}</SelectItem>
+                    <SelectItem value="period">{t('settings.account.period')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Timezone */}
               <div className="space-y-2">
-                <Label htmlFor="timezone">Strefa czasowa</Label>
+                <Label htmlFor="timezone">{t('settings.account.timezone')}</Label>
                 <Select 
                   value={localStorage.getItem('timezone') || 'Europe/Amsterdam'}
                   onValueChange={(value) => {
                     localStorage.setItem('timezone', value);
-                    toast.success('Strefa czasowa zapisana');
+                    toast.success(t('settings.account.timezoneSaved'));
                   }}
                 >
                   <SelectTrigger id="timezone">
