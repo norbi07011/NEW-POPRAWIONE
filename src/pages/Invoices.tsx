@@ -83,12 +83,12 @@ export default function Invoices({ onNavigate }: InvoicesProps) {
     const client = clients?.find(c => c.id === invoice.client_id);
     
     if (!client) {
-      toast.error('❌ Brak danych klienta. Najpierw dodaj klienta do faktury.');
+      toast.error('❌ Geen klantgegevens. Voeg eerst een klant toe aan de factuur.');
       return;
     }
     
     if (!company) {
-      toast.error('❌ Brak danych firmy. Przejdź do Ustawień i uzupełnij dane swojej firmy.');
+      toast.error('❌ Geen bedrijfsgegevens. Ga naar Instellingen en vul uw bedrijfsgegevens in.');
       return;
     }
 
@@ -98,9 +98,9 @@ export default function Invoices({ onNavigate }: InvoicesProps) {
       
       if (isMobileDevice) {
         // Na telefonie użyj html2canvas + jsPDF
-        toast.loading('📱 Generowanie PDF dla telefonu...', { duration: 2000 });
+        toast.loading('📱 PDF genereren voor telefoon...', { duration: 2000 });
         await generateMobilePDF(invoice, company, client, invoice.lines, i18n.language, selectedTemplateId || 'classic');
-        toast.success('✅ PDF zapisany! Sprawdź folder Pobrane', {
+        toast.success('✅ PDF opgeslagen! Controleer de map Downloads', {
           duration: 6000,
         });
       } else {
@@ -112,7 +112,7 @@ export default function Invoices({ onNavigate }: InvoicesProps) {
       }
     } catch (error: any) {
       const errorMsg = error?.message || 'Nieznany błąd';
-      toast.error(`❌ Błąd generowania PDF: ${errorMsg}`);
+      toast.error(`❌ Fout bij genereren PDF: ${errorMsg}`);
       console.error('PDF Generation Error:', error);
     }
   };
@@ -287,15 +287,15 @@ UWAGA: Faktura została pobrana jako plik HTML/PDF. Proszę załączyć ją ręc
       const gmailWindow = window.open(gmailUrl, '_blank');
       
       if (gmailWindow) {
-        toast.success('Otwarto Gmail - proszę załączyć pobrany plik faktury');
+        toast.success('Gmail geopend - voeg het gedownloade factuurbestand toe');
       } else {
         // Fallback na mailto: jeśli blokowane popup
         const mailtoLink = `mailto:${client.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         window.location.href = mailtoLink;
-        toast.success('Otwarto klienta email - proszę załączyć pobrany plik faktury');
+        toast.success('E-mailclient geopend - voeg het gedownloade factuurbestand toe');
       }
     } catch (error) {
-      toast.error('Błąd podczas przygotowywania emaila');
+      toast.error('Fout bij voorbereiden e-mail');
       console.error(error);
     }
   };
@@ -303,7 +303,7 @@ UWAGA: Faktura została pobrana jako plik HTML/PDF. Proszę załączyć ją ręc
   const handleSendWhatsApp = async (invoice: Invoice) => {
     const client = clients?.find(c => c.id === invoice.client_id);
     if (!client) {
-      toast.error('Brak danych klienta');
+      toast.error('Geen klantgegevens');
       return;
     }
 
@@ -359,14 +359,14 @@ ${company?.name || ''}`;
       
       // Pokaż instrukcję
       setTimeout(() => {
-        toast.info('💡 Instrukcja: Po otwarciu WhatsApp kliknij ikonę 📎 (załącznik) i wybierz wygenerowany plik PDF faktury', {
+        toast.info('💡 Instructie: Nadat WhatsApp is geopend, klik op het 📎 pictogram (bijlage) en selecteer het gegenereerde PDF-factuurbestand', {
           duration: 8000,
         });
       }, 1000);
       
     } catch (err) {
       console.error('WhatsApp open error', err);
-      toast.error('Nie można otworzyć WhatsApp');
+      toast.error('Kan WhatsApp niet openen');
     }
   };
 
@@ -413,20 +413,20 @@ ${company?.name || ''}`;
             </video>
           </div>
 
-          {/* PRAWA STRONA: Tekst i przyciski */}
+          {/* RECHTERKANT: Tekst en knoppen */}
           <div className="flex flex-col justify-center px-4 md:px-6 lg:px-8">
             <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-black mb-3 md:mb-4 tracking-tight">
-              📄 Faktury
+              📄 Facturen
             </h1>
             <p className="text-xl lg:text-2xl text-black mb-8 font-medium">
-              Zarządzaj wszystkimi fakturami w jednym miejscu
+              Beheer al uw facturen op één plek
             </p>
             <button 
               onClick={handleCreateInvoice}
               className="px-10 py-5 bg-linear-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-2xl font-black text-lg shadow-lg hover:shadow-xl border-2 border-blue-200 transition-all duration-300 hover:scale-105 flex items-center gap-3 w-fit"
             >
               <Plus size={24} weight="bold" />
-              Nowa faktura
+              Nieuwe factuur
               {currentPlan === 'free' && (
                 <Badge variant="secondary" className="ml-2">
                   {invoices?.length || 0}/5
@@ -825,11 +825,11 @@ ${company?.name || ''}`;
                                       }
                                     } catch (error) {
                                       console.error('Delete error:', error);
-                                      alert('Błąd podczas usuwania faktury');
+                                      alert('Fout bij verwijderen factuur');
                                     }
                                   }}
                                   className="p-2 bg-red-100 hover:bg-red-200 rounded-xl transition-colors duration-200 cursor-pointer"
-                                  title="Usuń fakturę"
+                                  title="Verwijder factuur"
                                   style={{ pointerEvents: 'auto', zIndex: 9999 }}
                                 >
                                   <Trash className="text-red-600 pointer-events-none" size={18} />
