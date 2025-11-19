@@ -828,7 +828,7 @@ export default function Appointments() {
             {/* Klient */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Label htmlFor="client_id">Klient (opcjonalnie)</Label>
+                <Label htmlFor="client_id">{t('appointments.client')} ({t('common.optional')})</Label>
                 <Button
                   type="button"
                   variant="outline"
@@ -845,7 +845,7 @@ export default function Appointments() {
                 onValueChange={(value) => setFormData({ ...formData, client_id: value === 'none' ? '' : value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Wybierz klienta" />
+                  <SelectValue placeholder={t('appointments.chooseClient')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">{t('common.none')}</SelectItem>
@@ -861,7 +861,7 @@ export default function Appointments() {
             {/* Data i czas */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="date">Data *</Label>
+                <Label htmlFor="date">{t('appointments.date')} *</Label>
                 <Input
                   id="date"
                   type="date"
@@ -884,7 +884,7 @@ export default function Appointments() {
 
             {/* Czas trwania */}
             <div>
-              <Label htmlFor="duration">Czas trwania (minuty)</Label>
+              <Label htmlFor="duration">{t('appointments.durationLabel')}</Label>
               <Select 
                 value={formData.duration.toString()} 
                 onValueChange={(value) => setFormData({ ...formData, duration: parseInt(value) })}
@@ -893,9 +893,9 @@ export default function Appointments() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="15">15 minut</SelectItem>
-                  <SelectItem value="30">30 minut</SelectItem>
-                  <SelectItem value="45">45 minut</SelectItem>
+                  <SelectItem value="15">{t('appointments.minutes15')}</SelectItem>
+                  <SelectItem value="30">{t('appointments.minutes30')}</SelectItem>
+                  <SelectItem value="45">{t('appointments.minutes45')}</SelectItem>
                   <SelectItem value="60">1 godzina</SelectItem>
                   <SelectItem value="90">1.5 godziny</SelectItem>
                   <SelectItem value="120">2 godziny</SelectItem>
@@ -916,7 +916,7 @@ export default function Appointments() {
                   className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 transition-all"
                 >
                   <MapPin className="w-4 h-4 mr-1" />
-                  {showMap ? 'Ukryj mapę' : 'Pokaż mapę'}
+                  {showMap ? t('appointments.hideMap') : t('appointments.showMap')}
                 </Button>
               </div>
               
@@ -951,7 +951,7 @@ export default function Appointments() {
                       <div className="flex items-center gap-2 text-sm">
                         <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                         <span className="font-medium text-gray-700 dark:text-gray-300">
-                          {formData.location || 'Wybierz lokalizację'}
+                          {formData.location || t('appointments.chooseLocation')}
                         </span>
                       </div>
                     </div>
@@ -982,7 +982,7 @@ export default function Appointments() {
                       className="hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
                     >
                       <NavigationArrow className="w-4 h-4 mr-2" />
-                      Moja lokalizacja
+                      {t('appointments.myLocationBtn')}
                     </Button>
                     <Button
                       type="button"
@@ -996,20 +996,20 @@ export default function Appointments() {
                       className="hover:bg-green-50 dark:hover:bg-green-900/20 transition-all"
                     >
                       <NavigationArrow className="w-4 h-4 mr-2" />
-                      Otwórz w Google Maps
+                      {t('appointments.openInMaps')}
                     </Button>
                   </div>
 
                   {/* Sugestie popularnych lokalizacji */}
                   <div>
-                    <Label className="text-xs text-gray-600 dark:text-gray-400 mb-2">Popularne lokalizacje:</Label>
+                    <Label className="text-xs text-gray-600 dark:text-gray-400 mb-2">{t('appointments.popularLocationsLabel')}</Label>
                     <div className="flex flex-wrap gap-2">
                       {[
-                        'Biuro firmy',
-                        'Plac budowy',
-                        'Online - Zoom',
-                        'Online - Teams',
-                        'Telefon'
+                        t('appointments.officeCompany'),
+                        t('appointments.buildingSite'),
+                        t('appointments.onlineZoom'),
+                        t('appointments.onlineTeams'),
+                        t('appointments.phoneCall')
                       ].map((loc) => (
                         <Button
                           key={loc}
@@ -1030,7 +1030,7 @@ export default function Appointments() {
 
             {/* Przypomnienie */}
             <div>
-              <Label htmlFor="reminder">Przypomnienie</Label>
+              <Label htmlFor="reminder">{t('appointments.reminder')}</Label>
               <Select 
                 value={formData.reminder_minutes.toString()} 
                 onValueChange={(value) => setFormData({ ...formData, reminder_minutes: parseInt(value) })}
@@ -1039,13 +1039,13 @@ export default function Appointments() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0">Bez przypomnienia</SelectItem>
+                  <SelectItem value="0">{t('appointments.noReminder')}</SelectItem>
                   <SelectItem value="10">10 minut przed</SelectItem>
                   <SelectItem value="15">15 minut przed</SelectItem>
                   <SelectItem value="30">30 minut przed</SelectItem>
                   <SelectItem value="60">1 godzinę przed</SelectItem>
                   <SelectItem value="120">2 godziny przed</SelectItem>
-                  <SelectItem value="1440">1 dzień przed</SelectItem>
+                  <SelectItem value="1440">{t('appointments.dayBefore1')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1053,7 +1053,7 @@ export default function Appointments() {
             {/* Status (tylko przy edycji) */}
             {editingAppointment && (
               <div>
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="status">{t('appointments.status')}</Label>
                 <Select 
                   value={formData.status} 
                   onValueChange={(value: any) => setFormData({ ...formData, status: value })}
@@ -1062,9 +1062,9 @@ export default function Appointments() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="scheduled">Zaplanowane</SelectItem>
-                    <SelectItem value="completed">Zakończone</SelectItem>
-                    <SelectItem value="cancelled">Anulowane</SelectItem>
+                    <SelectItem value="scheduled">{t('appointments.scheduled')}</SelectItem>
+                    <SelectItem value="completed">{t('appointments.completed')}</SelectItem>
+                    <SelectItem value="cancelled">{t('appointments.cancelled')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1072,12 +1072,12 @@ export default function Appointments() {
 
             {/* Opis */}
             <div>
-              <Label htmlFor="description">Notatki</Label>
+              <Label htmlFor="description">{t('appointments.notes')}</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Dodatkowe informacje o spotkaniu..."
+                placeholder={t('appointments.additionalInfo')}
                 rows={4}
               />
             </div>
@@ -1086,7 +1086,7 @@ export default function Appointments() {
             <div>
               <Label htmlFor="category">
                 <Tag className="w-4 h-4 inline mr-2" />
-                Kategoria
+                {t('appointments.category')}
               </Label>
               <Select 
                 value={formData.category} 
@@ -1102,19 +1102,19 @@ export default function Appointments() {
                   <SelectItem value="consultation">
                     <span className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                      Konsultacja
+                      {t('appointments.consultation')}
                     </span>
                   </SelectItem>
                   <SelectItem value="meeting">
                     <span className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      Spotkanie
+                      {t('appointments.meeting')}
                     </span>
                   </SelectItem>
                   <SelectItem value="inspection">
                     <span className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                      Kontrola
+                      {t('appointments.inspection')}
                     </span>
                   </SelectItem>
                   <SelectItem value="estimate">
