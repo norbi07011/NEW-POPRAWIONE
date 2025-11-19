@@ -469,6 +469,7 @@ export default {
       11: 'November',
       12: 'December',
     },
+    dayNames: ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'],
     appointments: {
       title: 'Afspraken',
       newAppointment: 'Nieuwe afspraak',

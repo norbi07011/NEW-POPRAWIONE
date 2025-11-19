@@ -442,8 +442,13 @@ export default function Appointments() {
   const renderCalendar = () => {
     const { daysInMonth, startingDayOfWeek, year, month } = getDaysInMonth(currentMonth);
     const days: React.ReactElement[] = [];
-    const monthNames = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
-    const dayNames = ['Nie', 'Pon', 'Wto', 'Śro', 'Czw', 'Pią', 'Sob'];
+    const monthNames = [
+      t('common.months.1'), t('common.months.2'), t('common.months.3'),
+      t('common.months.4'), t('common.months.5'), t('common.months.6'),
+      t('common.months.7'), t('common.months.8'), t('common.months.9'),
+      t('common.months.10'), t('common.months.11'), t('common.months.12')
+    ];
+    const dayNames = t('common.dayNames') as unknown as string[];
 
     // Puste komórki przed pierwszym dniem miesiąca
     for (let i = 0; i < startingDayOfWeek; i++) {
