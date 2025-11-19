@@ -347,7 +347,7 @@ export default function Appointments() {
     try {
       if (editingAppointment) {
         await updateAppointment(editingAppointment.id, appointmentData);
-        toast.success('✅ Spotkanie zaktualizowane');
+        toast.success(t('appointments.appointmentUpdated'));
       } else {
         await createAppointment(appointmentData);
         
@@ -362,27 +362,27 @@ export default function Appointments() {
             await createAppointment(recAppointment);
           }
           
-          toast.success(`✅ Utworzono ${recurringAppointments.length + 1} spotkań (seria)`);
+          toast.success(t('appointments.seriesCreated', { count: recurringAppointments.length + 1 }));
         } else {
-          toast.success('✅ Spotkanie dodane');
+          toast.success(t('appointments.appointmentAdded'));
         }
       }
       setIsDialogOpen(false);
     } catch (error) {
       console.error('Error saving appointment:', error);
-      toast.error('❌ Błąd podczas zapisywania');
+      toast.error(t('appointments.errorSaving'));
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Czy na pewno usunąć to spotkanie?')) return;
+    if (!confirm(t('appointments.confirmDeleteQuestion'))) return;
     
     try {
       await deleteAppointment(id);
-      toast.success('✅ Spotkanie usunięte');
+      toast.success(t('appointments.appointmentDeleted'));
     } catch (error) {
       console.error('Error deleting appointment:', error);
-      toast.error('❌ Błąd podczas usuwania');
+      toast.error(t('appointments.errorDeleting'));
     }
   };
 
@@ -815,12 +815,12 @@ export default function Appointments() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Tytuł */}
             <div>
-              <Label htmlFor="title">Tytuł spotkania *</Label>
+              <Label htmlFor="title">{t('appointments.appointmentTitle')} *</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="np. Prezentacja oferty"
+                placeholder={t('appointments.titlePlaceholder')}
                 required
               />
             </div>
