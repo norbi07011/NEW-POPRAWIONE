@@ -275,10 +275,10 @@ Wersja: 1.0.0 (Build: ${new Date().toISOString().split('T')[0]})`;
           {/* TEKST NA OCEANIE - wyraźnie nad wodą */}
           <div className="relative h-full flex flex-col items-center justify-center text-center px-8 z-20">
             <h1 className="text-6xl font-black mb-4 text-white drop-shadow-[0_4px_30px_rgba(0,0,0,0.9)] tracking-tight" style={{textShadow: '0 0 40px rgba(255,255,255,0.8), 0 4px 20px rgba(0,0,0,1)'}}>
-              🎯 Panel główny
+              🎯 Dashboard
             </h1>
             <p className="text-2xl text-white font-bold drop-shadow-[0_2px_20px_rgba(0,0,0,0.9)] tracking-wide" style={{textShadow: '0 0 20px rgba(255,255,255,0.6), 0 2px 10px rgba(0,0,0,1)'}}>
-              Profesjonalny system zarządzania finansami
+              Professioneel financiël beheersysteem
             </p>
             
             {/* PRZYCISK - płynie nad falami */}
@@ -289,7 +289,7 @@ Wersja: 1.0.0 (Build: ${new Date().toISOString().split('T')[0]})`;
               <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-linear-to-r from-transparent via-black/20 to-transparent"></div>
               <span className="relative flex items-center gap-3">
                 <Plus size={28} weight="bold" />
-                Nowa faktura
+                Nieuwe factuur
               </span>
             </button>
           </div>
