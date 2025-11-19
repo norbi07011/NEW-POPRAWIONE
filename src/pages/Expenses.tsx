@@ -920,13 +920,13 @@ export default function Expenses() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8">Ładowanie...</div>
+              <div className="text-center py-8">{t('common.loading')}</div>
             ) : filteredExpenses.length === 0 ? (
               <div className="text-center py-16">
                 <div className="p-6 bg-linear-to-br from-sky-100 to-blue-100 rounded-3xl inline-block mb-6">
                   <Receipt size={64} className="text-sky-600" />
                 </div>
-                <h3 className="text-2xl font-bold text-black mb-3">Brak wydatków</h3>
+                <h3 className="text-2xl font-bold text-black mb-3">{t('expenses.noExpenses')}</h3>
                 <p className="text-black mb-6 text-lg">Dodaj pierwszy wydatek, aby zacząć</p>
               </div>
             ) : (

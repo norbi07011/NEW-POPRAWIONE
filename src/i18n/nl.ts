@@ -279,6 +279,9 @@ export default {
         fileTooLarge: 'Bestand is te groot. Maximale grootte is 2MB',
         logoFormats: 'PNG, JPG, SVG (max 2MB)',
       },
+      account: {
+        description: 'Beheer uw account en inloggegevens',
+      },
       tabs: {
         company: 'Bedrijfsgegevens',
         preferences: 'Voorkeuren',
@@ -546,6 +549,8 @@ export default {
       confirmDelete: 'Weet je zeker dat je deze uitgave wilt verwijderen?',
       noExpenses: 'Geen uitgaven',
       createFirst: 'Maak je eerste uitgave',
+      allExpenses: 'Alle zakelijke uitgaven',
+      noAttachments: 'Geen bijlagen. Voeg foto\'s van bonnen of facturen toe met de knop hierboven.',
       categories: {
         office: 'Kantoor',
         transport: 'Transport',
@@ -580,6 +585,7 @@ export default {
       confirmDelete: 'Weet je zeker dat je deze rit wilt verwijderen?',
       noTrips: 'Geen ritten',
       createFirst: 'Maak je eerste rit',
+      noEntries: 'Geen inzendingen in deze periode',
       totalDistance: 'Totale afstand',
       totalAmount: 'Totaal bedrag',
       thisMonth: 'Deze maand',

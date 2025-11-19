@@ -848,7 +848,7 @@ export default function Appointments() {
                   <SelectValue placeholder="Wybierz klienta" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Brak</SelectItem>
+                  <SelectItem value="none">{t('common.none')}</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name}

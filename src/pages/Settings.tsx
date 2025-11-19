@@ -391,7 +391,7 @@ export default function Settings() {
                 👤 Konto użytkownika
               </CardTitle>
               <CardDescription>
-                Zarządzaj swoim kontem i danymi logowania
+                {t('settings.account.description')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
