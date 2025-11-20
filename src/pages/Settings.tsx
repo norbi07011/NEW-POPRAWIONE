@@ -328,7 +328,7 @@ export default function Settings() {
       console.log('Save result:', result);
       toast.success(t('settings.saved'));
     } catch (error) {
-      toast.error('Błąd podczas zapisywania');
+      toast.error(t('common.saveError'));
       console.error('Save error:', error);
     }
   };
@@ -913,7 +913,7 @@ export default function Settings() {
                         
                       } catch (error) {
                         console.error('Import error:', error);
-                        toast.error('Błąd importu', {
+                        toast.error(t('common.importError'), {
                           description: 'Nie udało się wczytać pliku. Sprawdź czy to prawidłowy plik backup.'
                         });
                       }

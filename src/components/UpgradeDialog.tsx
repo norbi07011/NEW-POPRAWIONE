@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,7 +47,7 @@ export function UpgradeDialog({ isOpen, onClose, reason }: UpgradeDialogProps) {
         toast.error(result.message);
       }
     } catch (error) {
-      toast.error('Błąd aktywacji licencji');
+      toast.error(t('common.activationError'));
     } finally {
       setIsActivating(false);
     }

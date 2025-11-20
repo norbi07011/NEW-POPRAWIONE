@@ -308,7 +308,7 @@ export default function Appointments() {
       });
       setIsClientDialogOpen(false);
     } catch (error) {
-      toast.error('Błąd dodawania klienta');
+      toast.error(t('common.addError'));
       console.error(error);
     }
   };
@@ -979,7 +979,7 @@ export default function Appointments() {
                               toast.success(t('appointments.locationSet'));
                             },
                             () => {
-                              toast.error('Nie można pobrać lokalizacji');
+                              toast.error(t('common.locationError'));
                             }
                           );
                         }

@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors, DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -244,6 +245,8 @@ export default function DocumentTemplateEditor({
   onSave,
   onCancel,
 }: DocumentTemplateEditorProps) {
+  const { t } = useTranslation();
+  
   // Initial state
   const initialState: EditorState = {
     templateName: template?.name || 'Nowy dokument',
@@ -432,7 +435,7 @@ export default function DocumentTemplateEditor({
 
         toast.success('Szablon zaimportowany!');
       } catch (error) {
-        toast.error('Błąd importu - nieprawidłowy format JSON');
+        toast.error(t('common.importError') + ' - ' + t('common.invalidFormat'));
       }
     };
     reader.readAsText(file);

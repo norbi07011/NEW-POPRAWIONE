@@ -83,7 +83,7 @@ export default function Clients() {
     
     if (!formData.kvk_number || formData.kvk_number.trim().length < 8) {
       console.log('⚠️ KVK number too short');
-      toast.error('Wpisz prawidłowy numer KVK (8 cyfr)');
+      toast.error(t('common.kvkInvalid'));
       return;
     }
 
@@ -124,7 +124,7 @@ export default function Clients() {
     
     if (!formData.name || formData.name.trim().length < 2) {
       console.log('⚠️ Name too short');
-      toast.error('Wpisz co najmniej 2 znaki nazwy firmy');
+      toast.error(t('common.companyNameMinLength'));
       return;
     }
 
@@ -236,7 +236,7 @@ export default function Clients() {
     console.log('Saving client data:', formData); // Debug
 
     if (!formData.name) {
-      toast.error('Nazwa jest wymagana');
+      toast.error(t('common.nameRequired'));
       return;
     }
 
@@ -254,7 +254,7 @@ export default function Clients() {
       setIsDialogOpen(false);
     } catch (error) {
       console.error('Save error:', error); // Debug
-      toast.error('Błąd zapisu klienta: ' + (error as Error).message);
+      toast.error(t('common.saveError') + ': ' + (error as Error).message);
     }
   };
 

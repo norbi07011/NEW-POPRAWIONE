@@ -352,6 +352,8 @@ const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
 
 // MAIN COMPONENT
 export default function InvoiceTemplateEditor({ existingTemplate, onBack }: InvoiceTemplateEditorProps) {
+  const { t } = useTranslation();
+  
   // Initial state from existing template or defaults
   const initialState: EditorState = {
     templateName: existingTemplate?.name || 'Nowy Szablon Faktury',
@@ -650,7 +652,7 @@ export default function InvoiceTemplateEditor({ existingTemplate, onBack }: Invo
 
         toast.success(`Szablon "${imported.name}" zaimportowany!`);
       } catch (error) {
-        toast.error('Błąd importu szablonu!');
+        toast.error(t('common.importError'));
         console.error(error);
       }
     };

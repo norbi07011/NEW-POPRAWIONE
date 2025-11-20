@@ -235,7 +235,7 @@ export default function InvoiceForm({ onNavigate, editInvoiceId }: InvoiceFormPr
 
     if (numberingMode === 'manual') {
       if (!manualInvoiceNumber.trim()) {
-        toast.error('Wprowadź numer faktury');
+        toast.error(t('common.invoiceNumberRequired'));
         return;
       }
       invoiceNumber = manualInvoiceNumber.trim();

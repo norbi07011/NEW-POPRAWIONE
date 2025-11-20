@@ -430,7 +430,7 @@ export const TimesheetTemplateEditor: React.FC<TimesheetTemplateEditorProps> = (
 
         toast.success(`Szablon "${importedTemplate.name}" zaimportowany!`);
       } catch (error) {
-        toast.error('Błąd podczas importowania szablonu!');
+        toast.error(t('common.importError'));
         console.error(error);
       }
     };

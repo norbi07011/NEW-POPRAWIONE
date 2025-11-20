@@ -216,7 +216,7 @@ export default function Expenses() {
       }
     } catch (error) {
       console.error('Error adding attachments:', error);
-      toast.error('Błąd podczas dodawania załączników');
+      toast.error(t('common.attachmentError'));
     }
   };
 
