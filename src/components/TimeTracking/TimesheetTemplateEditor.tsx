@@ -296,7 +296,7 @@ export const TimesheetTemplateEditor: React.FC<TimesheetTemplateEditorProps> = (
     },
     () => {
       // Ctrl+P: Preview (pokazuje toast z info)
-      toast.info('Podgląd wydruku - wkrótce! (Ctrl+P)');
+      toast.info(t('common.printPreviewComingSoon'));
     }
   );
 

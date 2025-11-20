@@ -363,7 +363,7 @@ export default function DocumentTemplateEditor({
     },
     () => {
       // Ctrl+P - Preview
-      toast.info('Podgląd dokumentu (funkcja w przygotowaniu)');
+      toast.info(t('common.documentPreviewComingSoon'));
     }
   );
 
@@ -463,7 +463,7 @@ export default function DocumentTemplateEditor({
     }
 
     if (errors.length > 0) {
-      toast.error('Błędy walidacji:\n• ' + errors.join('\n• '));
+      toast.error(t('common.validationErrors') + ':\n• ' + errors.join('\n• '));
       return;
     }
 

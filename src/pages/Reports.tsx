@@ -553,7 +553,7 @@ export default function Reports() {
                     size="sm"
                     onClick={() => {
                       exportChartsDataToCSV();
-                      toast.success('✅ Eksport CSV zakończony');
+                      toast.success('✅ ' + t('common.csvExportSuccess'));
                     }}
                     className="gap-2"
                   >

@@ -4,6 +4,7 @@
  */
 
 import { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,6 +46,7 @@ interface RichTextEditorProps {
 }
 
 export default function RichTextEditor({ value, onChange, className = '' }: RichTextEditorProps) {
+  const { t } = useTranslation();
   const editorRef = useRef<HTMLDivElement>(null);
   const [selectedColor, setSelectedColor] = useState('#000000');
   const [bgColor, setBgColor] = useState('#ffffff');
@@ -125,7 +127,7 @@ export default function RichTextEditor({ value, onChange, className = '' }: Rich
   const addBorder = () => {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
-      toast.info('Zaznacz tekst aby dodać ramkę');
+      toast.info(t('common.selectTextForBorder'));
       return;
     }
 

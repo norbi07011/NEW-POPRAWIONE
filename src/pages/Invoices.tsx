@@ -316,7 +316,7 @@ UWAGA: Faktura została pobrana jako plik HTML/PDF. Proszę załączyć ją ręc
       // Najpierw wygeneruj PDF faktury
       if (company) {
         await generateInvoicePDF(invoice, company, client, invoice.lines, i18n.language, selectedTemplateId || 'classic');
-        toast.success('PDF wygenerowany - proszę pobrać przed wysłaniem na WhatsApp');
+        toast.success(t('common.pdfGeneratedDownload'));
       }
 
       // Clean phone number
