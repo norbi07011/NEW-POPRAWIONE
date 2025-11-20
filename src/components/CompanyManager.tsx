@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Building, Plus, Trash, Edit, Check, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 
 export function CompanyManager() {
   const { t } = useTranslation();
@@ -230,11 +231,11 @@ export function CompanyManager() {
                 </div>
 
                 <div className="col-span-2">
-                  <Label htmlFor="address">{t('clients.address')}</Label>
-                  <Input
-                    id="address"
+                  <AddressAutocomplete
                     value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    onChange={(fullAddress) => setFormData({ ...formData, address: fullAddress })}
+                    label={t('clients.address')}
+                    placeholder="Zoek adres..."
                   />
                 </div>
                 <div>

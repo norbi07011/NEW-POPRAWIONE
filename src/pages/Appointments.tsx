@@ -24,6 +24,7 @@ import {
   checkAppointmentConflict,
   suggestFreeSlots
 } from '@/lib/calendarUtils';
+import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 
 export default function Appointments() {
   const { t } = useTranslation();
@@ -389,11 +390,11 @@ export default function Appointments() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'scheduled':
-        return <Badge variant="default" className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md hover:shadow-lg transition-all">Zaplanowane</Badge>;
+        return <Badge variant="default" className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md hover:shadow-lg transition-all">{t('appointments.scheduled')}</Badge>;
       case 'completed':
-        return <Badge variant="default" className="bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md hover:shadow-lg transition-all">Zakończone</Badge>;
+        return <Badge variant="default" className="bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md hover:shadow-lg transition-all">{t('appointments.completed')}</Badge>;
       case 'cancelled':
-        return <Badge variant="destructive" className="bg-gradient-to-r from-red-500 to-rose-600 shadow-md hover:shadow-lg transition-all">Anulowane</Badge>;
+        return <Badge variant="destructive" className="bg-gradient-to-r from-red-500 to-rose-600 shadow-md hover:shadow-lg transition-all">{t('appointments.cancelled')}</Badge>;
       default:
         return null;
     }
@@ -443,12 +444,10 @@ export default function Appointments() {
     const { daysInMonth, startingDayOfWeek, year, month } = getDaysInMonth(currentMonth);
     const days: React.ReactElement[] = [];
     const monthNames = [
-      t('common.months.1'), t('common.months.2'), t('common.months.3'),
-      t('common.months.4'), t('common.months.5'), t('common.months.6'),
-      t('common.months.7'), t('common.months.8'), t('common.months.9'),
-      t('common.months.10'), t('common.months.11'), t('common.months.12')
+      'Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni',
+      'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'
     ];
-    const dayNames = t('common.dayNames') as unknown as string[];
+    const dayNames = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
 
     // Puste komórki przed pierwszym dniem miesiąca
     for (let i = 0; i < startingDayOfWeek; i++) {
@@ -527,7 +526,7 @@ export default function Appointments() {
               onClick={goToToday}
               className="bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 font-semibold shadow-sm hover:shadow-md transition-all"
             >
-              Dzisiaj
+              Vandaag
             </Button>
             <Button 
               variant="outline" 
@@ -569,15 +568,15 @@ export default function Appointments() {
         <div className="flex gap-6 text-sm bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 p-4 rounded-xl shadow-sm">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 shadow-md"></div>
-            <span className="font-medium text-gray-700 dark:text-gray-300">Zaplanowane</span>
+            <span className="font-medium text-gray-700 dark:text-gray-300">{t('appointments.scheduled')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 shadow-md"></div>
-            <span className="font-medium text-gray-700 dark:text-gray-300">Ukończone</span>
+            <span className="font-medium text-gray-700 dark:text-gray-300">{t('appointments.completed')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-lg bg-gradient-to-r from-red-500 to-rose-600 shadow-md"></div>
-            <span className="font-medium text-gray-700 dark:text-gray-300">Anulowane</span>
+            <span className="font-medium text-gray-700 dark:text-gray-300">{t('appointments.cancelled')}</span>
           </div>
         </div>
       </div>
@@ -925,14 +924,13 @@ export default function Appointments() {
                 </Button>
               </div>
               
-              <Input
-                id="location"
+              <AddressAutocomplete
                 value={formData.location}
-                onChange={(e) => {
-                  setFormData({ ...formData, location: e.target.value });
+                onChange={(fullAddress) => {
+                  setFormData({ ...formData, location: fullAddress });
                   // Geocoduj adres po zmianie
-                  if (e.target.value.length > 3) {
-                    geocodeAddress(e.target.value);
+                  if (fullAddress.length > 3) {
+                    geocodeAddress(fullAddress);
                   }
                 }}
                 placeholder={t('appointments.locationPlaceholder')}
@@ -1143,7 +1141,7 @@ export default function Appointments() {
               <div className="flex items-center justify-between">
                 <Label htmlFor="recurring" className="flex items-center gap-2">
                   <Repeat className="w-4 h-4" />
-                  Powtarzające się spotkanie
+                  Terugkerende afspraak
                 </Label>
                 <Switch
                   id="recurring"
@@ -1156,7 +1154,7 @@ export default function Appointments() {
                 <div className="space-y-3 mt-3 pt-3 border-t">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label htmlFor="frequency" className="text-sm">Częstotliwość</Label>
+                      <Label htmlFor="frequency" className="text-sm">Frequentie</Label>
                       <Select 
                         value={formData.recurring_frequency} 
                         onValueChange={(value: any) => setFormData({ ...formData, recurring_frequency: value })}
@@ -1166,14 +1164,14 @@ export default function Appointments() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="daily">Codziennie</SelectItem>
-                          <SelectItem value="weekly">Co tydzień</SelectItem>
+                          <SelectItem value="weekly">Wekelijks</SelectItem>
                           <SelectItem value="biweekly">Co 2 tygodnie</SelectItem>
                           <SelectItem value="monthly">Co miesiąc</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="occurrences" className="text-sm">Liczba powtórzeń</Label>
+                      <Label htmlFor="occurrences" className="text-sm">Aantal herhalingen</Label>
                       <Input
                         id="occurrences"
                         type="number"
@@ -1186,7 +1184,7 @@ export default function Appointments() {
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="end_date" className="text-sm">Lub data zakończenia (opcjonalnie)</Label>
+                    <Label htmlFor="end_date" className="text-sm">Of einddatum (optioneel)</Label>
                     <Input
                       id="end_date"
                       type="date"

@@ -29,6 +29,7 @@ import { UpgradeDialog } from '@/components/UpgradeDialog';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Key } from '@phosphor-icons/react';
 import { DEMO_MODE } from '@/config/firebase';
+import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 
 // Account Section Component
 function AccountSection() {
@@ -485,12 +486,14 @@ export default function Settings() {
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address">{t('settings.address')} *</Label>
-                  <Input
-                    id="address"
-                    placeholder="Zuiderparklaaan 65, 2574HS 's-Gravenhage, Nederland"
+                  <AddressAutocomplete
                     value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    onChange={(fullAddress) => {
+                      setFormData({ ...formData, address: fullAddress });
+                    }}
+                    label={`${t('settings.address')} *`}
+                    placeholder="Zoek adres..."
+                    required
                   />
                 </div>
 

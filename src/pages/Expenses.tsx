@@ -477,16 +477,16 @@ export default function Expenses() {
               <DialogTrigger asChild>
                 <button className="px-10 py-5 bg-linear-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-2xl font-black text-lg shadow-2xl transition-all duration-500 hover:scale-105 flex items-center gap-3 w-fit">
                   <Plus size={24} weight="bold" />
-                  Nowy wydatek
+                  {t('expenses.newExpense')}
                 </button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>
-                    {editingExpense ? '✏️ Edytuj wydatek' : '➕ Nowy wydatek'}
+                    {editingExpense ? `✏️ ${t('expenses.editExpense')}` : `➕ ${t('expenses.newExpense')}`}
                   </DialogTitle>
                   <DialogDescription>
-                    Dodaj fakturę zakupu lub wydatek biznesowy
+                    {t('expenses.addInvoice')}
                   </DialogDescription>
                 </DialogHeader>
                 
@@ -537,7 +537,7 @@ export default function Expenses() {
                     <Input
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Dodatkowy opis wydatku"
+                      placeholder={t('expenses.descriptionPlaceholder')}
                     />
                   </div>
 
@@ -545,7 +545,7 @@ export default function Expenses() {
                   <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <Label className="font-semibold text-blue-900">
-                        💡 Sposób wprowadzania kwoty
+                        {t('expenses.amountEntryMethod')}
                       </Label>
                     </div>
                     <div className="flex items-center gap-4">
@@ -558,7 +558,7 @@ export default function Expenses() {
                           className="w-4 h-4 text-blue-600"
                         />
                         <span className={`text-sm ${amountIncludesVAT ? 'font-bold text-blue-900' : 'text-black'}`}>
-                          ☑️ Kwota ZAWIERA VAT (z rachunku)
+                          {t('expenses.amountIncludesVat')}
                         </span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
@@ -570,21 +570,21 @@ export default function Expenses() {
                           className="w-4 h-4 text-blue-600"
                         />
                         <span className={`text-sm ${!amountIncludesVAT ? 'font-bold text-blue-900' : 'text-black'}`}>
-                          ☐ Kwota NETTO (bez VAT)
+                          {t('expenses.amountNetOnly')}
                         </span>
                       </label>
                     </div>
                     <p className="text-xs text-black mt-2">
                       {amountIncludesVAT 
-                        ? '📄 Przykład: Rachunek IKEA 193.60€ → System odliczy VAT → Netto: 160€, VAT: 33.60€'
-                        : '💼 Przykład: Usługa 160€ netto → System doliczy VAT → Brutto: 193.60€'
+                        ? t('expenses.exampleIkea')
+                        : t('expenses.exampleNetAmount')
                       }
                     </p>
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <Label>{amountIncludesVAT ? 'Kwota brutto (€) *' : 'Kwota netto (€) *'}</Label>
+                      <Label>{amountIncludesVAT ? t('expenses.amountGross') : t('expenses.amountNet')}</Label>
                       <Input
                         type="number"
                         step="0.01"
@@ -646,7 +646,7 @@ export default function Expenses() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label>Metoda płatności</Label>
+                      <Label>{t('expenses.paymentMethod')}</Label>
                       <Select
                         value={formData.payment_method}
                         onValueChange={(value) => setFormData({ ...formData, payment_method: value })}
@@ -655,7 +655,7 @@ export default function Expenses() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="bank_transfer">Przelew bankowy</SelectItem>
+                          <SelectItem value="bank_transfer">{t('expenses.bankTransfer')}</SelectItem>
                           <SelectItem value="card">Karta płatnicza</SelectItem>
                           <SelectItem value="cash">Gotówka</SelectItem>
                           <SelectItem value="direct_debit">Polecenie zapłaty</SelectItem>
@@ -664,28 +664,28 @@ export default function Expenses() {
                     </div>
                     
                     <div>
-                      <Label>Numer faktury</Label>
+                      <Label>{t('expenses.invoiceNumber')}</Label>
                       <Input
                         value={formData.invoice_number}
                         onChange={(e) => setFormData({ ...formData, invoice_number: e.target.value })}
-                        placeholder="Opcjonalnie"
+                        placeholder={t('expenses.invoiceNumberOptional')}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label>Notatki</Label>
+                    <Label>{t('expenses.notesLabel')}</Label>
                     <Textarea
                       value={formData.notes}
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      placeholder="Dodatkowe informacje..."
+                      placeholder={t('expenses.notesPlaceholder')}
                       rows={3}
                     />
                   </div>
 
                   {/* Sekcja załączników (zdjęcia paragonów/faktur) */}
                   <div className="space-y-3 p-4 bg-gray-50 rounded-lg border">
-                    <Label className="text-base font-semibold">📸 Załączniki (zdjęcia paragonów/faktur)</Label>
+                    <Label className="text-base font-semibold">{t('expenses.attachmentsLabel')}</Label>
                     
                     {/* Przyciski dodawania */}
                     <div className="flex gap-2 flex-wrap">
@@ -776,7 +776,7 @@ export default function Expenses() {
                     {attachments.length > 0 && (
                       <div className="mt-3">
                         <p className="text-sm text-black mb-2">
-                          Załączniki ({attachments.length}):
+                          {t('expenses.attachmentsCount', { count: attachments.length })}
                         </p>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                           {attachments.map((att) => (
@@ -823,7 +823,7 @@ export default function Expenses() {
                     
                     {attachments.length === 0 && (
                       <p className="text-sm text-black italic">
-                        Brak załączników. Dodaj zdjęcia paragonów lub faktur używając przycisku powyżej.
+                        {t('expenses.noAttachmentsMessage')}
                       </p>
                     )}
                   </div>

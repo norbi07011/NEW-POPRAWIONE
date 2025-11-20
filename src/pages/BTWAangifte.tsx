@@ -888,9 +888,9 @@ export function BTWAangifte() {
                     <span className="font-bold text-lg">
                       {korData.korStatus?.isEligible 
                         ? korData.korStatus.annual_turnover < 19000
-                          ? '✅ Kwalifikujesz się do KOR'
-                          : '⚠️ STREFA GRANICZNA KOR'
-                        : '❌ Przekroczono próg KOR'}
+                          ? t('btw.qualifiesForKor')
+                          : t('btw.borderlineKor')
+                        : t('btw.exceededKor')}
                     </span>
                   </div>
                   
@@ -912,14 +912,14 @@ export function BTWAangifte() {
 
                 {/* Progi Deklaracji */}
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm font-semibold text-blue-900 mb-2">📅 Rodzaj rozliczeń BTW:</p>
+                  <p className="text-sm font-semibold text-blue-900 mb-2">{t('btw.vatDeclarationType')}</p>
                   <div className="grid grid-cols-3 gap-2 text-xs">
                     <div className={`p-2 rounded text-center ${
                       korData.korStatus?.annual_turnover! < 20000 
                         ? 'bg-green-100 border border-green-300 font-bold' 
                         : 'bg-gray-100 text-black'
                     }`}>
-                      <div>Roczne</div>
+                      <div>{t('btw.annual')}</div>
                       <div className="text-xs">&lt; €20k (KOR)</div>
                     </div>
                     <div className={`p-2 rounded text-center ${
@@ -927,7 +927,7 @@ export function BTWAangifte() {
                         ? 'bg-blue-100 border border-blue-300 font-bold' 
                         : 'bg-gray-100 text-black'
                     }`}>
-                      <div>Kwartalne</div>
+                      <div>{t('btw.quarterly')}</div>
                       <div className="text-xs">€20k - €1.5M</div>
                     </div>
                     <div className={`p-2 rounded text-center ${
@@ -935,7 +935,7 @@ export function BTWAangifte() {
                         ? 'bg-red-100 border border-red-300 font-bold' 
                         : 'bg-gray-100 text-black'
                     }`}>
-                      <div>Miesięczne</div>
+                      <div>{t('btw.monthly')}</div>
                       <div className="text-xs">&gt; €1.5M</div>
                     </div>
                   </div>
@@ -956,23 +956,23 @@ export function BTWAangifte() {
                   <div className="text-5xl font-bold text-blue-600 mb-2">
                     {healthScore.overall_score}
                   </div>
-                  <p className="text-sm text-black">Ogólny wynik zgodności</p>
+                  <p className="text-sm text-black">{t('btw.overallComplianceScore')}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-blue-50 rounded-lg">
-                    <p className="text-xs text-black mb-1">Zgodność</p>
+                    <p className="text-xs text-black mb-1">{t('btw.compliance')}</p>
                     <p className="text-xl font-semibold text-blue-700">{healthScore.components.compliance}%</p>
                   </div>
                   <div className="p-3 bg-green-50 rounded-lg">
-                    <p className="text-xs text-black mb-1">Dokładność</p>
+                    <p className="text-xs text-black mb-1">{t('btw.accuracy')}</p>
                     <p className="text-xl font-semibold text-green-700">{healthScore.components.accuracy}%</p>
                   </div>
                   <div className="p-3 bg-yellow-50 rounded-lg">
-                    <p className="text-xs text-black mb-1">Terminowość</p>
+                    <p className="text-xs text-black mb-1">{t('btw.timeliness')}</p>
                     <p className="text-xl font-semibold text-yellow-700">{healthScore.components.timeliness}%</p>
                   </div>
                   <div className="p-3 bg-purple-50 rounded-lg">
-                    <p className="text-xs text-black mb-1">Optymalizacja</p>
+                    <p className="text-xs text-black mb-1">{t('btw.optimization')}</p>
                     <p className="text-xl font-semibold text-purple-700">{healthScore.components.optimization}%</p>
                   </div>
                 </div>
@@ -1094,7 +1094,7 @@ export function BTWAangifte() {
           className="flex items-center gap-2"
         >
           <Lightbulb className="h-5 w-5" />
-          {showAdvanced ? 'Ukryj zaawansowane analizy' : 'Pokaż zaawansowane analizy'}
+          {showAdvanced ? t('btw.hideAdvancedAnalytics') : t('btw.showAdvancedAnalytics')}
         </Button>
       </div>
     </div>

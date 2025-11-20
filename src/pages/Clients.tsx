@@ -15,6 +15,7 @@ import { Plus, PencilSimple, Trash, Users, User, Buildings, MagnifyingGlass, Che
 import { Client } from '@/types';
 import { toast } from 'sonner';
 import { searchByKvkNumber, searchByName, generateVATFromKVK, type KVKSearchResult } from '../lib/kvkApi';
+import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 
 // Słownik krajów
 const COUNTRIES = {
@@ -62,13 +63,11 @@ export default function Clients() {
   const [formData, setFormData] = useState({
     name: '',
     address: '',
-    country: 'PL',
-    client_type: 'company' as 'individual' | 'company',
+    kvk: '',
     vat_number: '',
-    kvk_number: '',
-    nip_number: '',
     email: '',
     phone: '',
+    contact_person: '',
     notes: '',
   });
 
@@ -549,13 +548,14 @@ export default function Clients() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="address">{t('clients.address')} *</Label>
-              <Textarea
-                id="address"
-                placeholder="Straatweg 20, 3131 CR Vlaardiingen, Nederland"
+              <AddressAutocomplete
                 value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                rows={2}
+                onChange={(fullAddress) => {
+                  setFormData({ ...formData, address: fullAddress });
+                }}
+                label={`${t('clients.address')} *`}
+                placeholder="Zoek adres..."
+                required
               />
             </div>
 
