@@ -1,19 +1,11 @@
 /**
  * 🔐 Authentication Context
- * Zarządza stanem logowania użytkownika - FIREBASE AUTH
+ * Zarządza stanem logowania użytkownika - SUPABASE AUTH (wszystko w jednym miejscu)
  */
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { 
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithPopup,
-  User as FirebaseUser
-} from 'firebase/auth';
-import { auth } from '@/config/firebase';
+import { supabase } from '@/config/supabase';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
 interface User {
@@ -34,13 +26,13 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Konwersja Firebase User na nasz format
-const convertUser = (firebaseUser: FirebaseUser | null): User | null => {
-  if (!firebaseUser) return null;
+// Konwersja Supabase User na nasz format
+const convertUser = (supabaseUser: SupabaseUser | null): User | null => {
+  if (!supabaseUser) return null;
   return {
-    uid: firebaseUser.uid,
-    email: firebaseUser.email,
-    displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || null
+    uid: supabaseUser.id,
+    email: supabaseUser.email || null,
+    displayName: supabaseUser.user_metadata?.display_name || supabaseUser.email?.split('@')[0] || null
   };
 };
 
@@ -49,53 +41,78 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Nasłuchuj zmian stanu autentykacji Firebase
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(convertUser(firebaseUser));
+    // Sprawdź aktualną sesję Supabase
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(convertUser(session?.user || null));
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Nasłuchuj zmian sesji Supabase
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(convertUser(session?.user || null));
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast.success('Zalogowano pomyślnie!');
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      toast.success('✅ Zalogowano pomyślnie!');
     } catch (error: any) {
       console.error('Sign in error:', error);
-      throw new Error(getErrorMessage(error.code));
+      throw new Error(getErrorMessage(error.message));
     }
   };
 
   const signUp = async (email: string, password: string) => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin
+        }
+      });
+      
+      if (error) throw error;
       toast.success('✅ Konto utworzone! Możesz się teraz zalogować.');
     } catch (error: any) {
       console.error('Sign up error:', error);
-      throw new Error(getErrorMessage(error.code));
+      throw new Error(getErrorMessage(error.message));
     }
   };
 
   const signInWithGoogle = async () => {
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      toast.success('Zalogowano przez Google!');
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      
+      if (error) throw error;
+      toast.success('✅ Zalogowano przez Google!');
     } catch (error: any) {
       console.error('Google sign in error:', error);
-      throw new Error(getErrorMessage(error.code));
+      throw new Error(getErrorMessage(error.message));
     }
   };
 
   const signOut = async () => {
     try {
-      await firebaseSignOut(auth);
-      toast.success('Wylogowano pomyślnie');
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      toast.success('✅ Wylogowano pomyślnie');
     } catch (error) {
       console.error('Sign out error:', error);
-      toast.error('Błąd wylogowania');
+      toast.error('❌ Błąd wylogowania');
     }
   };
 
@@ -120,15 +137,14 @@ export function useAuth() {
   return context;
 }
 
-// Helper: Tłumaczenie błędów Firebase
-function getErrorMessage(errorCode: string): string {
-  if (errorCode.includes('invalid-credential')) return 'Nieprawidłowy email lub hasło';
-  if (errorCode.includes('invalid-email')) return 'Nieprawidłowy adres email';
-  if (errorCode.includes('user-not-found')) return 'Użytkownik nie istnieje';
-  if (errorCode.includes('wrong-password')) return 'Nieprawidłowe hasło';
-  if (errorCode.includes('email-already-in-use')) return 'Ten email jest już zajęty';
-  if (errorCode.includes('weak-password')) return 'Hasło musi mieć min. 6 znaków';
-  if (errorCode.includes('too-many-requests')) return 'Zbyt wiele prób. Spróbuj później';
-  if (errorCode.includes('network-request-failed')) return 'Brak połączenia z internetem';
-  return 'Wystąpił błąd. Spróbuj ponownie';
+// Helper: Tłumaczenie błędów Supabase
+function getErrorMessage(message: string): string {
+  if (message.includes('Invalid login credentials')) return 'Nieprawidłowy email lub hasło';
+  if (message.includes('Email not confirmed')) return 'Potwierdź swój email (sprawdź skrzynkę)';
+  if (message.includes('User already registered')) return 'Ten email jest już zajęty';
+  if (message.includes('Password should be at least 6 characters')) return 'Hasło musi mieć min. 6 znaków';
+  if (message.includes('Invalid email')) return 'Nieprawidłowy adres email';
+  if (message.includes('too many requests')) return 'Zbyt wiele prób. Spróbuj później';
+  if (message.includes('Email link is invalid')) return 'Link aktywacyjny wygasł. Zarejestruj się ponownie';
+  return message || 'Wystąpił błąd. Spróbuj ponownie';
 }
