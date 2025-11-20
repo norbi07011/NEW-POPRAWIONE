@@ -380,7 +380,6 @@ export default function Settings() {
           <TabsTrigger value="templates">{t('settings.tabs.templates')}</TabsTrigger>
           <TabsTrigger value="timesheet-templates">{t('settings.tabs.timesheetTemplates')}</TabsTrigger>
           <TabsTrigger value="document-templates">{t('settings.tabs.documentTemplates')}</TabsTrigger>
-          <TabsTrigger value="downloads">{t('settings.tabs.downloads')}</TabsTrigger>
           <TabsTrigger value="desktop">{t('settings.tabs.desktop')}</TabsTrigger>
         </TabsList>
 
@@ -1362,7 +1361,7 @@ export default function Settings() {
           </div>
         </TabsContent>
 
-        <TabsContent value="downloads">
+        <TabsContent value="desktop">
           <div className="space-y-6">
             <Card>
               <CardHeader>
