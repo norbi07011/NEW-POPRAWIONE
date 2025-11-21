@@ -734,9 +734,34 @@ export function useCompanies() {
 
   const createCompany = useCallback(async (companyData: any) => {
     try {
+      // FIREBASE MODE - zapisz do Supabase
+      if (user?.uid) {
+        const newCompany = {
+          ...companyData,
+          user_id: user.uid,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        // Supabase automatically generates UUID for id
+        const savedCompany = await SupabaseService.createCompany(newCompany);
+        
+        if (!savedCompany) {
+          throw new Error('Failed to save company to Supabase');
+        }
+        
+        // Zapisz również jako aktywną firmę w useCompany()
+        await setStorageItem('company', JSON.stringify(savedCompany));
+        
+        await fetchCompanies();
+        return savedCompany;
+      }
+      
+      // FALLBACK - localStorage only (gdy NIE MA usera - tryb offline)
+      // Ten kod NIE POWINIEN się wykonywać gdy user.uid istnieje!
       const newCompany = {
         ...companyData,
-        id: Date.now().toString(),
+        id: `local-${Date.now()}`, // Prefix 'local-' dla lokalnych ID
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -750,6 +775,9 @@ export function useCompanies() {
       if (companiesList.length === 0) {
         await setActiveCompany(newCompany.id);
       }
+      
+      // WAŻNE: Zapisz również jako 'company' dla useCompany()
+      await setStorageItem('company', JSON.stringify(newCompany));
 
       await fetchCompanies();
       return newCompany;
@@ -757,7 +785,7 @@ export function useCompanies() {
       console.error('Error creating company:', error);
       throw error;
     }
-  }, [fetchCompanies]);
+  }, [fetchCompanies, user]);
 
   const updateCompany = useCallback(async (id: string, companyData: any) => {
     try {

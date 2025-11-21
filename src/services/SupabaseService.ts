@@ -16,17 +16,44 @@ export class SupabaseService {
     if (!isSupabaseConfigured()) return null;
     
     try {
+      // Pobierz PIERWSZĄ firmę (najnowszą) jeśli jest wiele
       const { data, error } = await supabase
         .from('companies')
         .select('*')
         .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (error) throw error;
+      return data && data.length > 0 ? data[0] : null;
+    } catch (error) {
+      console.error('Error fetching company:', error);
+      return null;
+    }
+  }
+  
+  static async createCompany(company: Partial<Company>): Promise<Company | null> {
+    if (!isSupabaseConfigured()) return null;
+    
+    try {
+      // Usuń id jeśli istnieje - Supabase wygeneruje UUID automatycznie
+      const { id, ...companyData } = company as any;
+      
+      const { data, error } = await supabase
+        .from('companies')
+        .insert({
+          ...companyData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
         .single();
       
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Error fetching company:', error);
-      return null;
+      console.error('Error creating company:', error);
+      throw error;
     }
   }
   
