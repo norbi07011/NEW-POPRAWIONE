@@ -15,8 +15,6 @@ import { toast } from 'sonner';
 import { generateInvoicePDF, generateMobilePDF } from '@/lib/pdf-generator';
 import { exportToCSV, exportToJSON, exportToExcel, exportToXML } from '@/lib/export-utils';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { LicenseManager } from '@/services/LicenseManager';
-import { UpgradeDialog } from '@/components/UpgradeDialog';
 
 interface InvoicesProps {
   onNavigate: (page: string) => void;
@@ -30,12 +28,7 @@ export default function Invoices({ onNavigate }: InvoicesProps) {
   const { company, loading: companyLoading } = useCompany();
   const [selectedTemplateId] = useState('classic');
   const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
-  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
-  const [upgradeReason, setUpgradeReason] = useState('');
   const isMobile = useIsMobile();
-
-  const licenseInfo = LicenseManager.getLicenseInfo();
-  const currentPlan = LicenseManager.getCurrentPlan();
 
   const handleCreateInvoice = () => {
     // Sprawdź czy są dane firmy
@@ -50,16 +43,7 @@ export default function Invoices({ onNavigate }: InvoicesProps) {
       return;
     }
 
-    // Sprawdź limit faktur
-    const check = LicenseManager.canCreateInvoice(invoices?.length || 0);
-    
-    if (!check.allowed) {
-      setUpgradeReason(check.message || 'Osiągnięto limit faktur');
-      setShowUpgradeDialog(true);
-      toast.error(check.message);
-      return;
-    }
-
+    // Bez sprawdzania limitów - zawsze pozwalamy
     onNavigate('invoices-new');
   };
 
@@ -427,11 +411,6 @@ ${company?.name || ''}`;
             >
               <Plus size={24} weight="bold" />
               Nieuwe factuur
-              {currentPlan === 'free' && (
-                <Badge variant="secondary" className="ml-2">
-                  {invoices?.length || 0}/5
-                </Badge>
-              )}
             </button>
           </div>
         </div>
@@ -851,21 +830,6 @@ ${company?.name || ''}`;
         </div>
 
         {/* License Info Badge */}
-        {currentPlan !== 'free' && (
-          <div className="fixed bottom-4 right-4 z-50">
-            <Badge className="bg-linear-to-r from-purple-500 to-pink-500 text-white px-4 py-2 shadow-lg">
-              <Crown className="w-4 h-4 mr-2" weight="fill" />
-              {currentPlan.toUpperCase()} Plan
-            </Badge>
-          </div>
-        )}
-
-        {/* Upgrade Dialog */}
-        <UpgradeDialog 
-          isOpen={showUpgradeDialog}
-          onClose={() => setShowUpgradeDialog(false)}
-          reason={upgradeReason}
-        />
       </div>
     </div>
   );

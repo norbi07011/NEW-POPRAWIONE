@@ -24,7 +24,6 @@ import { CSVImport } from '@/components/CSVImport';
 import { PEZET_WEEKBRIEF_TEMPLATE, DEFAULT_TEMPLATES } from '@/components/TimeTracking/Weekbrief/defaultTemplates';
 import { getTemplateById, defaultTemplates } from '@/lib/invoice-templates';
 import { cn } from '@/lib/utils';
-import { LicenseManager } from '@/services/LicenseManager';
 import { UpgradeDialog } from '@/components/UpgradeDialog';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Key } from '@phosphor-icons/react';
@@ -139,8 +138,6 @@ export default function Settings() {
   const { company, updateCompany, loading } = useCompany();
   
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
-  const licenseInfo = LicenseManager.getLicenseInfo();
-  const currentPlan = LicenseManager.getCurrentPlan();
   
   // Default company data jeśli brak w bazie
   const defaultCompany = {
