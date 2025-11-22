@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Toaster } from 'sonner';
 import './i18n';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +9,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AudioProvider } from '@/contexts/AudioContext';
 import { AudioToggle } from '@/components/AudioToggle';
 import { InstallPWA } from '@/components/InstallPWA';
+import { BrowserLoader } from '@/components/BrowserLoader';
 import { Timesheets } from '@/pages/Timesheets';
 import Invoices from './pages/Invoices';
 import InvoiceForm from './pages/InvoiceForm';
@@ -38,6 +39,22 @@ function AppContent() {
   const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState<Page>('reports');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Show loader on initial mount
+  useEffect(() => {
+    // Simulate initial loading (minimum 1.5s for smooth animation)
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // If still loading, show loader
+  if (isLoading) {
+    return <BrowserLoader />;
+  }
 
   // Download handlers
   const handleDownloadDesktop = async () => {

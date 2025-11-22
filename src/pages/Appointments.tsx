@@ -451,7 +451,7 @@ export default function Appointments() {
 
     // Puste komórki przed pierwszym dniem miesiąca
     for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(<div key={`empty-${i}`} className="h-32 bg-gray-50 dark:bg-gray-900"></div>);
+      days.push(<div key={`empty-${i}`} className="h-36 bg-gray-50 dark:bg-gray-900"></div>);
     }
 
     // Dni miesiąca

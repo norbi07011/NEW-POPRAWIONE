@@ -620,7 +620,7 @@ export default {
       errorSaving: '❌ Fout bij opslaan',
       confirmDeleteQuestion: 'Weet u zeker dat u deze vergadering wilt verwijderen?',
       appointmentDeleted: '✅ Vergadering verwijderd',
-      errorDeleting: '❌ Fout bij verwijderen',
+      errorDeleting: '❌ Fout bij verwijderen'
     },
     timesheets: {
       title: 'Urenregistratie',

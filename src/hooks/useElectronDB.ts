@@ -241,7 +241,7 @@ export function useInvoices() {
         const newInvoice = await SupabaseService.createInvoice(user.uid, invoiceData);
         const newId = newInvoice?.id || id;
         console.log('✅ Invoice saved to Supabase:', invoice.invoice_number);
-        fetchInvoices();
+        await fetchInvoices();
         return { ...invoiceData, id: newId };
       }
       
@@ -249,7 +249,7 @@ export function useInvoices() {
       if (isElectron() && window.electronAPI) {
         console.log('🖥️ Using Electron database');
         const result = await window.electronAPI.database.createInvoice(invoice);
-        fetchInvoices();
+        await fetchInvoices();
         return result;
       } else if (isMobile()) {
         console.log('📱 Using Capacitor Preferences');
@@ -259,7 +259,7 @@ export function useInvoices() {
         const updated = [...invoices, newInvoice];
         await Preferences.set({ key: 'invoices', value: JSON.stringify(updated) });
         console.log('✅ Invoice saved to Capacitor Preferences:', newInvoice.invoice_number);
-        fetchInvoices();
+        await fetchInvoices();
         return newInvoice;
       } else {
         console.log('🌐 Using localStorage fallback');
@@ -276,7 +276,7 @@ export function useInvoices() {
           throw new Error('Storage quota exceeded. Please delete old invoices.');
         }
         
-        setTimeout(() => fetchInvoices(), 0);
+        await fetchInvoices();
         return newInvoice;
       }
     } catch (error) {

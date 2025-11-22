@@ -381,7 +381,7 @@ export default function Clients() {
                     {filteredClients.map((client) => (
                       <div
                         key={client.id}
-                        className="premium-card group relative overflow-hidden bg-white/95 backdrop-blur-md p-4 border-2 border-blue-200"
+                        className="premium-card group relative overflow-hidden bg-white/95 backdrop-blur-md p-4 border-2 border-blue-200 min-h-[80px]"
                       >
                         <div className="relative grid grid-cols-7 gap-4 items-center">
                           <div className="font-bold text-black">{client.name}</div>
