@@ -10,6 +10,8 @@ import { AudioProvider } from '@/contexts/AudioContext';
 import { AudioToggle } from '@/components/AudioToggle';
 import { InstallPWA } from '@/components/InstallPWA';
 import { BrowserLoader } from '@/components/BrowserLoader';
+import { MobileLicenseActivation } from '@/components/MobileLicenseActivation';
+import { MobileLicenseManager } from '@/services/MobileLicenseManager';
 import { Timesheets } from '@/pages/Timesheets';
 import Invoices from './pages/Invoices';
 import InvoiceForm from './pages/InvoiceForm';
@@ -40,16 +42,76 @@ function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>('reports');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [needsLicense, setNeedsLicense] = useState(false);
+  const [isCheckingLicense, setIsCheckingLicense] = useState(true);
+
+  // 🔐 Sprawdź licencję mobile przy starcie
+  useEffect(() => {
+    checkMobileLicense();
+  }, []);
+
+  const checkMobileLicense = async () => {
+    try {
+      // Sprawdź czy to mobile app
+      const isMobile = MobileLicenseManager.isMobilePlatform();
+      
+      if (!isMobile) {
+        // Web/Desktop - nie wymaga licencji mobile
+        setIsCheckingLicense(false);
+        return;
+      }
+
+      // Sprawdź licencję mobile
+      const license = await MobileLicenseManager.checkLicense();
+      
+      if (!license || !license.isValid) {
+        console.log('⚠️ Mobile app requires license activation');
+        setNeedsLicense(true);
+        setIsCheckingLicense(false);
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('✅ Mobile license valid:', license.plan);
+      setNeedsLicense(false);
+      setIsCheckingLicense(false);
+
+    } catch (error) {
+      console.error('License check error:', error);
+      setIsCheckingLicense(false);
+    }
+  };
+
+  const handleLicenseActivated = () => {
+    setNeedsLicense(false);
+    setIsLoading(true);
+    // Odśwież aplikację po aktywacji
+    setTimeout(() => {
+      checkMobileLicense();
+    }, 500);
+  };
 
   // Show loader on initial mount
   useEffect(() => {
-    // Simulate initial loading (minimum 1.5s for smooth animation)
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
+    if (!isCheckingLicense && !needsLicense) {
+      // Simulate initial loading (minimum 1.5s for smooth animation)
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 1500);
 
-    return () => clearTimeout(timer);
-  }, []);
+      return () => clearTimeout(timer);
+    }
+  }, [isCheckingLicense, needsLicense]);
+
+  // If checking license, show loader
+  if (isCheckingLicense) {
+    return <BrowserLoader />;
+  }
+
+  // If mobile app needs license, show activation screen
+  if (needsLicense) {
+    return <MobileLicenseActivation onActivated={handleLicenseActivated} />;
+  }
 
   // If still loading, show loader
   if (isLoading) {

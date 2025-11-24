@@ -24,8 +24,29 @@ android {
     }
     buildTypes {
         release {
+            // 🔐 ZABEZPIECZENIA: Włącz minifikację i obfuskację kodu
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            
+            // 🔒 Dodatkowe zabezpieczenia
+            debuggable false
+            jniDebuggable false
+        }
+        debug {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            debuggable true
+        }
+    }
+    
+    // 🔐 Signing config (opcjonalnie - dla signed APK)
+    signingConfigs {
+        release {
+            // TODO: Dodaj tutaj certyfikat signing
+            // storeFile file('messubouw-release.keystore')
+            // storePassword 'YOUR_PASSWORD'
+            // keyAlias 'messubouw'
+            // keyPassword 'YOUR_PASSWORD'
         }
     }
 }
