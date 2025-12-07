@@ -22,6 +22,17 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    
+    // 🔐 Signing config dla Release APK - MUSI BYĆ PRZED buildTypes!
+    signingConfigs {
+        release {
+            storeFile file('messubouw-release.keystore')
+            storePassword 'MessuBouw2025!'
+            keyAlias 'messubouw'
+            keyPassword 'MessuBouw2025!'
+        }
+    }
+    
     buildTypes {
         release {
             // 🔐 ZABEZPIECZENIA: Włącz minifikację i obfuskację kodu
@@ -32,21 +43,13 @@ android {
             // 🔒 Dodatkowe zabezpieczenia
             debuggable false
             jniDebuggable false
+            
+            // 🔑 Signing config
+            signingConfig signingConfigs.release
         }
         debug {
             minifyEnabled false
             debuggable true
-        }
-    }
-    
-    // 🔐 Signing config (opcjonalnie - dla signed APK)
-    signingConfigs {
-        release {
-            // TODO: Dodaj tutaj certyfikat signing
-            // storeFile file('messubouw-release.keystore')
-            // storePassword 'YOUR_PASSWORD'
-            // keyAlias 'messubouw'
-            // keyPassword 'YOUR_PASSWORD'
         }
     }
 }
