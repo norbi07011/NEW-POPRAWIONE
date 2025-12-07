@@ -681,16 +681,21 @@ export function useCompanies() {
   const fetchCompanies = useCallback(async () => {
     setLoading(true);
     try {
-      // FIREBASE MODE - pobierz firmę z Firestore jako pojedynczy dokument
-      if ( user?.uid) {
-        const company = await SupabaseService.getCompany(user.uid);
-        const companiesList = company ? [company] : [];
-        setCompanies(companiesList);
-        if (companiesList.length > 0) {
-          setActiveCompanyId(companiesList[0].id || 'default');
+      // FIREBASE MODE - pobierz firmę z Supabase
+      if (user?.uid) {
+        try {
+          const company = await SupabaseService.getCompany(user.uid);
+          const companiesList = company ? [company] : [];
+          setCompanies(companiesList);
+          if (companiesList.length > 0) {
+            setActiveCompanyId(companiesList[0].id || 'default');
+          }
+          setLoading(false);
+          return;
+        } catch (supabaseError) {
+          console.warn('⚠️ Supabase error, falling back to localStorage:', supabaseError);
+          // Kontynuuj do localStorage fallback
         }
-        setLoading(false);
-        return;
       }
       
       // FALLBACK - localStorage

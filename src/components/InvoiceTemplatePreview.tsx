@@ -88,8 +88,10 @@ function ClassicTemplate({ invoice, client, company, template, qrCodeUrl, weekNu
             {t('pdf.billTo')}
           </h3>
           <div className="space-y-1">
-            <p className="font-medium">{client?.name}</p>
-            <p className="text-sm text-black">{client?.address}</p>
+              <p className="font-medium">{client?.name}</p>
+              <p className="text-sm text-black">{client?.address}</p>
+              {client?.kvk_number && <p className="text-sm">KVK: {client.kvk_number}</p>}
+              {client?.vat_number && <p className="text-sm">BTW: {client.vat_number}</p>}
             {client?.vat_number && <p className="text-sm">BTW: {client.vat_number}</p>}
           </div>
         </div>

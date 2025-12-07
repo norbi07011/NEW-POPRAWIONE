@@ -367,7 +367,7 @@ function getTemplateBody(
           <div class="section-title">${t.buyer}</div>
           <div class="party-content">
             <strong>${escapeHtml(client.name)}</strong><br>
-            ${escapeHtml(client.address)}${client.vat_number ? `<br>BTW: ${escapeHtml(client.vat_number)}` : ''}
+            ${escapeHtml(client.address)}${client.kvk_number ? `<br>KVK: ${escapeHtml(client.kvk_number)}` : ''}${client.vat_number ? `<br>BTW: ${escapeHtml(client.vat_number)}` : ''}
           </div>
         </div>
         <div>
