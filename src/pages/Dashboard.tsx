@@ -62,7 +62,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 6. Aplikacja się uruchomi!
 
 📞 POMOC TECHNICZNA:
-Email: support@messubouw.com
+Email: info.messubouw@gmail.com
 
 Wersja: 1.0.0 (Build: ${new Date().toISOString().split('T')[0]})`;
 

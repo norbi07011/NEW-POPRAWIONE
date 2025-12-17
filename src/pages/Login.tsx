@@ -8,7 +8,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeSlash, GoogleLogo, EnvelopeSimple, Lock, Buildings } from '@phosphor-icons/react';
 import { toast } from 'sonner';
-import { DEMO_MODE } from '@/config/firebase';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -83,15 +82,6 @@ export default function Login() {
           </p>
         </div>
 
-        {/* DEMO MODE Info */}
-        {DEMO_MODE && (
-          <div className="mb-6 p-4 bg-white/20 backdrop-blur-md border-2 border-white/30 rounded-xl animate-fade-in">
-            <p className="text-sm text-white text-center font-semibold drop-shadow">
-              <strong>🔧 Demo Modus</strong> - U kunt elk e-mailadres en wachtwoord gebruiken
-            </p>
-          </div>
-        )}
-
         {/* Login Kaart - Glassmorphism */}
         <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/40 animate-fade-in-up">
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -106,7 +96,7 @@ export default function Login() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={DEMO_MODE ? "demo@messubouw.com" : "jouw@email.nl"}
+                  placeholder="jouw@email.nl"
                   className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
                   disabled={loading}
                 />
@@ -124,7 +114,7 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={DEMO_MODE ? "elk-wachtwoord" : "••••••••"}
+                  placeholder="••••••••"
                   className="w-full pl-12 pr-14 py-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
                   disabled={loading}
                 />
@@ -139,17 +129,15 @@ export default function Login() {
             </div>
 
             {/* Wachtwoord Vergeten */}
-            {!DEMO_MODE && (
-              <div className="text-right">
-                <button
-                  type="button"
-                  className="text-sm text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-all"
-                  disabled={loading}
-                >
-                  Wachtwoord vergeten?
-                </button>
-              </div>
-            )}
+            <div className="text-right">
+              <button
+                type="button"
+                className="text-sm text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-all"
+                disabled={loading}
+              >
+                Wachtwoord vergeten?
+              </button>
+            </div>
 
             {/* Inloggen Button - Gradient met Animatie */}
             <button

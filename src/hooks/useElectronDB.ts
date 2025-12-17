@@ -287,7 +287,7 @@ export function useInvoices() {
 
   const updateInvoice = useCallback(async (id: string, invoice: any) => {
     try {
-      // FIREBASE MODE
+      // SUPABASE MODE
       if ( user?.uid) {
         console.log('☁️ Updating invoice in Firestore:', id);
         await SupabaseService.updateInvoice(user.uid, id, invoice);
@@ -323,7 +323,7 @@ export function useInvoices() {
 
   const deleteInvoice = useCallback(async (id: string) => {
     try {
-      // FIREBASE MODE
+      // SUPABASE MODE
       if ( user?.uid) {
         console.log('☁️ Deleting invoice from Firestore:', id);
         await SupabaseService.deleteInvoice(user.uid, id);
@@ -380,7 +380,7 @@ export function useClients() {
   const fetchClients = useCallback(async () => {
     setLoading(true);
     try {
-      // FIREBASE MODE
+      // SUPABASE MODE
       if ( user?.uid) {
         const result = await SupabaseService.getClients(user.uid);
         setClients(result || []);
@@ -401,7 +401,7 @@ export function useClients() {
 
   const createClient = useCallback(async (client: any) => {
     try {
-      // FIREBASE MODE
+      // SUPABASE MODE
       if ( user?.uid) {
         const { id, ...clientData } = client;
         const newId = await SupabaseService.createClient(user.uid, clientData);
@@ -428,7 +428,7 @@ export function useClients() {
 
   const updateClient = useCallback(async (id: string, client: any) => {
     try {
-      // FIREBASE MODE
+      // SUPABASE MODE
       if ( user?.uid) {
         await SupabaseService.updateClient(user.uid, id, client);
         await fetchClients();
@@ -453,7 +453,7 @@ export function useClients() {
 
   const deleteClient = useCallback(async (id: string) => {
     try {
-      // FIREBASE MODE
+      // SUPABASE MODE
       if ( user?.uid) {
         await SupabaseService.deleteClient(user.uid, id);
         await fetchClients();
@@ -499,7 +499,7 @@ export function useProducts() {
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      // FIREBASE MODE
+      // SUPABASE MODE
       if ( user?.uid) {
         const result = await SupabaseService.getProducts(user.uid);
         setProducts(result || []);
@@ -520,7 +520,7 @@ export function useProducts() {
 
   const createProduct = useCallback(async (product: any) => {
     try {
-      // FIREBASE MODE
+      // SUPABASE MODE
       if ( user?.uid) {
         const { id, ...productData } = product;
         const newId = await SupabaseService.createProduct(user.uid, productData);
@@ -547,7 +547,7 @@ export function useProducts() {
 
   const updateProduct = useCallback(async (id: string, product: any) => {
     try {
-      // FIREBASE MODE
+      // SUPABASE MODE
       if ( user?.uid) {
         await SupabaseService.updateProduct(user.uid, id, product);
         await fetchProducts();
@@ -572,7 +572,7 @@ export function useProducts() {
 
   const deleteProduct = useCallback(async (id: string) => {
     try {
-      // FIREBASE MODE
+      // SUPABASE MODE
       if ( user?.uid) {
         await SupabaseService.deleteProduct(user.uid, id);
         await fetchProducts();
@@ -618,7 +618,7 @@ export function useCompany() {
   const fetchCompany = useCallback(async () => {
     setLoading(true);
     try {
-      // FIREBASE MODE
+      // SUPABASE MODE
       if ( user?.uid) {
         const result = await SupabaseService.getCompany(user.uid);
         setCompany(result);
@@ -639,7 +639,7 @@ export function useCompany() {
 
   const updateCompany = useCallback(async (companyData: any) => {
     try {
-      // FIREBASE MODE
+      // SUPABASE MODE
       if ( user?.uid) {
         await SupabaseService.updateCompany(user.uid, companyData);
         setCompany({ ...company, ...companyData });
@@ -681,7 +681,7 @@ export function useCompanies() {
   const fetchCompanies = useCallback(async () => {
     setLoading(true);
     try {
-      // FIREBASE MODE - pobierz firmę z Supabase
+      // SUPABASE MODE - pobierz firmę z Supabase
       if (user?.uid) {
         try {
           const company = await SupabaseService.getCompany(user.uid);
@@ -739,7 +739,7 @@ export function useCompanies() {
 
   const createCompany = useCallback(async (companyData: any) => {
     try {
-      // FIREBASE MODE - zapisz do Supabase
+      // SUPABASE MODE - zapisz do Supabase
       if (user?.uid) {
         const newCompany = {
           ...companyData,

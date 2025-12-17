@@ -212,7 +212,7 @@ export function UpgradeDialog({ isOpen, onClose, reason }: UpgradeDialogProps) {
             <div className="text-center text-sm text-muted-foreground">
               <p>✅ 30 dni gwarancji zwrotu pieniędzy</p>
               <p>🔒 Bezpieczne płatności przez Stripe</p>
-              <p>💬 Email support: support@messubouw.com</p>
+              <p>💬 Email support: info.messubouw@gmail.com</p>
             </div>
           </div>
         ) : (

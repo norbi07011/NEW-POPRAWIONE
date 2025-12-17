@@ -207,7 +207,7 @@ export async function generateMobilePDF(
       const imgWidth = 210; // A4 width w mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      const pdf = new jsPDF.default({
+      const pdf = new jsPDF({
         orientation: imgHeight > imgWidth ? 'portrait' : 'landscape',
         unit: 'mm',
         format: 'a4',

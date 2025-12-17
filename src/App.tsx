@@ -3,7 +3,7 @@ import { Toaster } from 'sonner';
 import './i18n';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { FileText, Users, Package, ChartBar, Gear, Download, DeviceMobile, Car, Receipt, Clock, File, Calendar, List, X } from '@phosphor-icons/react';
+import { FileText, Users, Package, ChartBar, Gear, Download, DeviceMobile, Car, Receipt, Clock, File, Calendar, List, X, CreditCard, User } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AudioProvider } from '@/contexts/AudioContext';
@@ -24,8 +24,11 @@ import { BTWAangifte } from './pages/BTWAangifte';
 import Expenses from './pages/Expenses';
 import Documents from './pages/Documents.tsx';
 import Appointments from './pages/Appointments';
+import Pricing from './pages/Pricing';
+import Profile from './pages/Profile';
+import Auth from './pages/Auth';
 
-type Page = 'reports' | 'invoices' | 'invoices-new' | 'clients' | 'products' | 'expenses' | 'kilometers' | 'timesheets' | 'btw' | 'settings' | 'documents' | 'appointments';
+type Page = 'reports' | 'invoices' | 'invoices-new' | 'clients' | 'products' | 'expenses' | 'kilometers' | 'timesheets' | 'btw' | 'settings' | 'documents' | 'appointments' | 'pricing' | 'profile' | 'auth';
 
 function App() {
   return (
@@ -322,7 +325,7 @@ Adres sieciowy: http://192.168.178.75:5002/
 - Bez wysyłania do internetu
 - Szyfrowanie bazy danych
 
-🆘 POMOC: support@messubouw.com`;
+🆘 POMOC: info.messubouw@gmail.com`;
 
         // Pobierz instrukcje mobilne
         const blob = new Blob([mobileInstructions], { type: 'text/plain;charset=utf-8' });
@@ -391,6 +394,8 @@ Adres sieciowy: http://192.168.178.75:5002/
     { id: 'kilometers' as Page, icon: Car, label: t('nav.kilometers') },
     { id: 'timesheets' as Page, icon: Clock, label: t('nav.timesheets') },
     { id: 'btw' as Page, icon: ChartBar, label: t('nav.btw') },
+    { id: 'pricing' as Page, icon: CreditCard, label: '💰 Pricing' },
+    { id: 'profile' as Page, icon: User, label: '👤 Profile' },
     { id: 'settings' as Page, icon: Gear, label: t('nav.settings') },
   ];
 
@@ -418,6 +423,12 @@ Adres sieciowy: http://192.168.178.75:5002/
         return <Documents />;
       case 'appointments':
         return <Appointments />;
+      case 'pricing':
+        return <Pricing />;
+      case 'profile':
+        return <Profile />;
+      case 'auth':
+        return <Auth />;
       case 'clients':
         return <Clients />;
       case 'products':

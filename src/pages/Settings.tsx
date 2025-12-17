@@ -27,7 +27,6 @@ import { cn } from '@/lib/utils';
 import { UpgradeDialog } from '@/components/UpgradeDialog';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Key } from '@phosphor-icons/react';
-import { DEMO_MODE } from '@/config/firebase';
 import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 
 // Account Section Component
@@ -63,11 +62,6 @@ function AccountSection() {
             ID: {user?.uid?.substring(0, 12)}...
           </p>
         </div>
-        {DEMO_MODE && (
-          <Badge variant="secondary" className="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200">
-            🔧 Tryb Demo
-          </Badge>
-        )}
       </div>
 
       {/* Account Stats */}
@@ -79,7 +73,7 @@ function AccountSection() {
         <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Synchronizacja</p>
           <p className="text-lg font-semibold text-green-700 dark:text-green-400">
-            {DEMO_MODE ? 'Lokalna' : 'Chmura'}
+            Chmura
           </p>
         </div>
       </div>
@@ -121,11 +115,7 @@ function AccountSection() {
           ℹ️ Twoje dane są bezpieczne
         </h4>
         <p className="text-sm text-blue-800 dark:text-blue-200">
-          {DEMO_MODE ? (
-            <>Tryb demo - dane przechowywane lokalnie w przeglądarce. Firebase nie jest aktywny.</>
-          ) : (
-            <>Wszystkie dane są szyfrowane i przechowywane w bezpiecznej chmurze Firebase. Tylko Ty masz do nich dostęp.</>
-          )}
+          Wszystkie dane są szyfrowane i przechowywane w bezpiecznej chmurze Supabase. Tylko Ty masz do nich dostęp.
         </p>
       </div>
     </div>
