@@ -598,13 +598,13 @@ ${company?.name || ''}`;
                                     {t('invoices.sendEmail')}
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => handleMarkPaid(invoice)}>
+                                  <DropdownMenuItem onClick={() => handleMarkPaid(invoice.id)}>
                                     <CheckCircle className="mr-2 pointer-events-none" size={16} />
                                     {t('invoices.markPaid')}
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem 
-                                    onClick={() => handleDeleteInvoice(invoice)}
+                                    onClick={() => handleDeleteInvoice(invoice.id)}
                                     className="text-red-600 focus:text-red-600"
                                   >
                                     <Trash className="mr-2 pointer-events-none" size={16} />

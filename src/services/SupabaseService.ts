@@ -158,16 +158,34 @@ export class SupabaseService {
     if (!isSupabaseConfigured()) return false;
     
     try {
-      const { error } = await supabase
+      console.log('🗑️ DELETE INVOICE - START', { userId, id });
+      
+      // Sprawdź auth state
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('🔐 Auth session:', {
+        sessionExists: !!session,
+        sessionUserId: session?.user?.id,
+        matchesUserId: session?.user?.id === userId
+      });
+      
+      const { error, data } = await supabase
         .from('invoices')
         .delete()
         .eq('id', id)
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .select(); // Add select to see what was deleted
+      
+      console.log('🗑️ DELETE INVOICE - RESULT', {
+        success: !error,
+        error: error?.message,
+        deletedCount: data?.length || 0,
+        deletedData: data
+      });
       
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error deleting invoice:', error);
+      console.error('❌ Error deleting invoice:', error);
       throw error;
     }
   }

@@ -228,7 +228,7 @@ export function useInvoices() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user?.uid]); // FIX: Use user?.uid instead of user object to prevent infinite loop
 
   const createInvoice = useCallback(async (invoice: any) => {
     try {
@@ -283,7 +283,7 @@ export function useInvoices() {
       console.error('❌ Error creating invoice:', error);
       throw error;
     }
-  }, [fetchInvoices, user]);
+  }, [fetchInvoices, user?.uid]);
 
   const updateInvoice = useCallback(async (id: string, invoice: any) => {
     try {
@@ -319,17 +319,27 @@ export function useInvoices() {
       console.error('Error updating invoice:', error);
       throw error;
     }
-  }, [fetchInvoices, user]);
+  }, [fetchInvoices, user?.uid]);
 
   const deleteInvoice = useCallback(async (id: string) => {
     try {
+      console.log('🔍 DELETE INVOICE HOOK - START', {
+        id,
+        hasUser: !!user,
+        userId: user?.uid,
+        userEmail: user?.email
+      });
+      
       // SUPABASE MODE
-      if ( user?.uid) {
-        console.log('☁️ Deleting invoice from Firestore:', id);
+      if (user?.uid) {
+        console.log('☁️ Deleting invoice from Supabase:', { id, userId: user.uid });
         await SupabaseService.deleteInvoice(user.uid, id);
+        console.log('✅ Supabase delete complete, fetching invoices...');
         await fetchInvoices();
         return true;
       }
+      
+      console.log('⚠️ No user.uid, falling back to local storage');
       
       // ELECTRON MODE
       if (isElectron() && window.electronAPI) {
@@ -352,10 +362,10 @@ export function useInvoices() {
         return true;
       }
     } catch (error) {
-      console.error('Error deleting invoice:', error);
+      console.error('❌ Error deleting invoice:', error);
       throw error;
     }
-  }, [fetchInvoices, user]);
+  }, [fetchInvoices, user?.uid]);
 
   useEffect(() => {
     fetchInvoices();
@@ -397,7 +407,7 @@ export function useClients() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user?.uid]);
 
   const createClient = useCallback(async (client: any) => {
     try {
@@ -424,7 +434,7 @@ export function useClients() {
       console.error('Error creating client:', error);
       throw error;
     }
-  }, [fetchClients, user]);
+  }, [fetchClients, user?.uid]);
 
   const updateClient = useCallback(async (id: string, client: any) => {
     try {
@@ -449,7 +459,7 @@ export function useClients() {
       console.error('Error updating client:', error);
       throw error;
     }
-  }, [fetchClients, user]);
+  }, [fetchClients, user?.uid]);
 
   const deleteClient = useCallback(async (id: string) => {
     try {
@@ -474,7 +484,7 @@ export function useClients() {
       console.error('Error deleting client:', error);
       throw error;
     }
-  }, [fetchClients, user]);
+  }, [fetchClients, user?.uid]);
 
   useEffect(() => {
     fetchClients();
@@ -516,7 +526,7 @@ export function useProducts() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user?.uid]);
 
   const createProduct = useCallback(async (product: any) => {
     try {
@@ -543,7 +553,7 @@ export function useProducts() {
       console.error('Error creating product:', error);
       throw error;
     }
-  }, [fetchProducts, user]);
+  }, [fetchProducts, user?.uid]);
 
   const updateProduct = useCallback(async (id: string, product: any) => {
     try {
@@ -593,7 +603,7 @@ export function useProducts() {
       console.error('Error deleting product:', error);
       throw error;
     }
-  }, [fetchProducts, user]);
+  }, [fetchProducts, user?.uid]);
 
   useEffect(() => {
     fetchProducts();
@@ -635,7 +645,7 @@ export function useCompany() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user?.uid]);
 
   const updateCompany = useCallback(async (companyData: any) => {
     try {
@@ -657,7 +667,7 @@ export function useCompany() {
       console.error('Error updating company:', error);
       throw error;
     }
-  }, [user, company]);
+  }, [user?.uid, company?.id]); // FIX: Use primitive values to prevent infinite loop
 
   useEffect(() => {
     fetchCompany();
@@ -790,7 +800,7 @@ export function useCompanies() {
       console.error('Error creating company:', error);
       throw error;
     }
-  }, [fetchCompanies, user]);
+  }, [fetchCompanies, user?.uid]);
 
   const updateCompany = useCallback(async (id: string, companyData: any) => {
     try {
