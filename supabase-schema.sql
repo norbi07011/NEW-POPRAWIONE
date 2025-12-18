@@ -18,7 +18,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- ============================================
 CREATE TABLE IF NOT EXISTS companies (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id TEXT NOT NULL,
+  user_id UUID NOT NULL,
   name TEXT NOT NULL,
   address TEXT,
   kvk TEXT,
@@ -50,7 +50,7 @@ CREATE INDEX IF NOT EXISTS idx_companies_user_id ON companies(user_id);
 -- ============================================
 CREATE TABLE IF NOT EXISTS clients (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id TEXT NOT NULL,
+  user_id UUID NOT NULL,
   name TEXT NOT NULL,
   address TEXT,
   kvk TEXT,
@@ -71,7 +71,7 @@ CREATE INDEX IF NOT EXISTS idx_clients_name ON clients(name);
 -- ============================================
 CREATE TABLE IF NOT EXISTS products (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id TEXT NOT NULL,
+  user_id UUID NOT NULL,
   name TEXT NOT NULL,
   description TEXT,
   unit_price DECIMAL(10,2) NOT NULL,
@@ -89,7 +89,7 @@ CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);
 -- ============================================
 CREATE TABLE IF NOT EXISTS invoices (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id TEXT NOT NULL,
+  user_id UUID NOT NULL,
   invoice_number TEXT NOT NULL,
   client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
   issue_date DATE NOT NULL,
@@ -119,7 +119,7 @@ CREATE INDEX IF NOT EXISTS idx_invoices_issue_date ON invoices(issue_date);
 -- ============================================
 CREATE TABLE IF NOT EXISTS expenses (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id TEXT NOT NULL,
+  user_id UUID NOT NULL,
   date DATE NOT NULL,
   category TEXT NOT NULL,
   description TEXT,
@@ -140,7 +140,7 @@ CREATE INDEX IF NOT EXISTS idx_expenses_category ON expenses(category);
 -- ============================================
 CREATE TABLE IF NOT EXISTS kilometers (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id TEXT NOT NULL,
+  user_id UUID NOT NULL,
   date DATE NOT NULL,
   from_location TEXT NOT NULL,
   to_location TEXT NOT NULL,
@@ -170,77 +170,77 @@ ALTER TABLE kilometers ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Użytkownicy widzą tylko swoje dane
 CREATE POLICY "Users can view own companies" ON companies
-  FOR SELECT USING (auth.uid()::text = user_id);
+  FOR SELECT USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can insert own companies" ON companies
-  FOR INSERT WITH CHECK (auth.uid()::text = user_id);
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can update own companies" ON companies
-  FOR UPDATE USING (auth.uid()::text = user_id);
+  FOR UPDATE USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete own companies" ON companies
-  FOR DELETE USING (auth.uid()::text = user_id);
+  FOR DELETE USING (auth.uid() = user_id);
 
 -- Repeat for all tables
 CREATE POLICY "Users can view own clients" ON clients
-  FOR SELECT USING (auth.uid()::text = user_id);
+  FOR SELECT USING (auth.uid() = user_id);
   
 CREATE POLICY "Users can insert own clients" ON clients
-  FOR INSERT WITH CHECK (auth.uid()::text = user_id);
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
   
 CREATE POLICY "Users can update own clients" ON clients
-  FOR UPDATE USING (auth.uid()::text = user_id);
+  FOR UPDATE USING (auth.uid() = user_id);
   
 CREATE POLICY "Users can delete own clients" ON clients
-  FOR DELETE USING (auth.uid()::text = user_id);
+  FOR DELETE USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can view own products" ON products
-  FOR SELECT USING (auth.uid()::text = user_id);
+  FOR SELECT USING (auth.uid() = user_id);
   
 CREATE POLICY "Users can insert own products" ON products
-  FOR INSERT WITH CHECK (auth.uid()::text = user_id);
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
   
 CREATE POLICY "Users can update own products" ON products
-  FOR UPDATE USING (auth.uid()::text = user_id);
+  FOR UPDATE USING (auth.uid() = user_id);
   
 CREATE POLICY "Users can delete own products" ON products
-  FOR DELETE USING (auth.uid()::text = user_id);
+  FOR DELETE USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can view own invoices" ON invoices
-  FOR SELECT USING (auth.uid()::text = user_id);
+  FOR SELECT USING (auth.uid() = user_id);
   
 CREATE POLICY "Users can insert own invoices" ON invoices
-  FOR INSERT WITH CHECK (auth.uid()::text = user_id);
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
   
 CREATE POLICY "Users can update own invoices" ON invoices
-  FOR UPDATE USING (auth.uid()::text = user_id);
+  FOR UPDATE USING (auth.uid() = user_id);
   
 CREATE POLICY "Users can delete own invoices" ON invoices
-  FOR DELETE USING (auth.uid()::text = user_id);
+  FOR DELETE USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can view own expenses" ON expenses
-  FOR SELECT USING (auth.uid()::text = user_id);
+  FOR SELECT USING (auth.uid() = user_id);
   
 CREATE POLICY "Users can insert own expenses" ON expenses
-  FOR INSERT WITH CHECK (auth.uid()::text = user_id);
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
   
 CREATE POLICY "Users can update own expenses" ON expenses
-  FOR UPDATE USING (auth.uid()::text = user_id);
+  FOR UPDATE USING (auth.uid() = user_id);
   
 CREATE POLICY "Users can delete own expenses" ON expenses
-  FOR DELETE USING (auth.uid()::text = user_id);
+  FOR DELETE USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can view own kilometers" ON kilometers
-  FOR SELECT USING (auth.uid()::text = user_id);
+  FOR SELECT USING (auth.uid() = user_id);
   
 CREATE POLICY "Users can insert own kilometers" ON kilometers
-  FOR INSERT WITH CHECK (auth.uid()::text = user_id);
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
   
 CREATE POLICY "Users can update own kilometers" ON kilometers
-  FOR UPDATE USING (auth.uid()::text = user_id);
+  FOR UPDATE USING (auth.uid() = user_id);
   
 CREATE POLICY "Users can delete own kilometers" ON kilometers
-  FOR DELETE USING (auth.uid()::text = user_id);
+  FOR DELETE USING (auth.uid() = user_id);
 
 -- ============================================
 -- DONE! ✅

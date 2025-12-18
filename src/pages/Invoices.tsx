@@ -795,31 +795,10 @@ ${company?.name || ''}`;
                                 {/* Delete Invoice */}
                                 <button 
                                   type="button"
-                                  onClick={async (e) => {
+                                  onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    
-                                    const confirmed = confirm(`${t('invoices.confirmDeletePrompt')} ${invoice.invoice_number}?`);
-                                    if (!confirmed) return;
-                                    
-                                    try {
-                                      console.log('Deleting invoice:', invoice.id);
-                                      
-                                      // Usunięcie z localStorage
-                                      const stored = localStorage.getItem('invoices');
-                                      if (stored) {
-                                        const invoices = JSON.parse(stored);
-                                        const updated = invoices.filter((inv: any) => inv.id !== invoice.id);
-                                        localStorage.setItem('invoices', JSON.stringify(updated));
-                                        console.log('Invoice deleted from localStorage');
-                                        
-                                        // Odświeżenie strony
-                                        window.location.reload();
-                                      }
-                                    } catch (error) {
-                                      console.error('Delete error:', error);
-                                      alert('Fout bij verwijderen factuur');
-                                    }
+                                    handleDeleteInvoice(invoice.id);
                                   }}
                                   className="p-2 bg-red-100 hover:bg-red-200 rounded-xl transition-colors duration-200 cursor-pointer"
                                   title="Verwijder factuur"

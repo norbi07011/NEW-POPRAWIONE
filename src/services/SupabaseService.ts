@@ -168,11 +168,12 @@ export class SupabaseService {
         matchesUserId: session?.user?.id === userId
       });
       
+      // ✅ NIE DODAWAJ .eq('user_id', userId) - RLS policy automatycznie to sprawdza!
+      // Po migracji user_id to UUID, a userId to string - Supabase ma problem z porównaniem
       const { error, data } = await supabase
         .from('invoices')
         .delete()
         .eq('id', id)
-        .eq('user_id', userId)
         .select(); // Add select to see what was deleted
       
       console.log('🗑️ DELETE INVOICE - RESULT', {
@@ -263,11 +264,11 @@ export class SupabaseService {
     if (!isSupabaseConfigured()) return false;
     
     try {
+      // RLS policy automatycznie filtruje po user_id
       const { error } = await supabase
         .from('clients')
         .delete()
-        .eq('id', id)
-        .eq('user_id', userId);
+        .eq('id', id);
       
       if (error) throw error;
       return true;
@@ -350,11 +351,11 @@ export class SupabaseService {
     if (!isSupabaseConfigured()) return false;
     
     try {
+      // RLS policy automatycznie filtruje po user_id
       const { error } = await supabase
         .from('products')
         .delete()
-        .eq('id', id)
-        .eq('user_id', userId);
+        .eq('id', id);
       
       if (error) throw error;
       return true;
