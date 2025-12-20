@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AudioProvider } from '@/contexts/AudioContext';
 import { AudioToggle } from '@/components/AudioToggle';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { InstallPWA } from '@/components/InstallPWA';
 import { BrowserLoader } from '@/components/BrowserLoader';
 import { MobileLicenseActivation } from '@/components/MobileLicenseActivation';
@@ -484,8 +485,12 @@ Adres sieciowy: http://192.168.178.75:5002/
                   <p className="text-xs text-gray-600 dark:text-gray-400">{t('app.subtitle')}</p>
                 </div>
               </div>
-              {/* Audio Toggle - moved from header */}
+              {/* Audio Toggle */}
               <AudioToggle />
+            </div>
+            {/* Language Switcher */}
+            <div className="mt-4">
+              <LanguageSwitcher />
             </div>
           </div>
           <nav className="px-4 py-6 pb-20 space-y-2">
