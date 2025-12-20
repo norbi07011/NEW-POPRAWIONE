@@ -854,7 +854,6 @@ ${company?.name || ''}`;
                                   }}
                                   className="p-2 bg-red-100 hover:bg-red-200 rounded-xl transition-colors duration-200 cursor-pointer"
                                   title="Verwijder factuur"
-                                  style={{ pointerEvents: 'auto', zIndex: 9999 }}
                                 >
                                   <Trash className="text-red-600 pointer-events-none" size={18} />
                                 </button>
@@ -879,7 +878,7 @@ ${company?.name || ''}`;
           <div className="fixed bottom-4 left-4 z-50">
             <Badge 
               variant="secondary" 
-              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 text-sm cursor-pointer hover:scale-105 transition-transform"
+              className="bg-linear-to-r from-purple-500 to-pink-500 text-white px-4 py-2 text-sm cursor-pointer hover:scale-105 transition-transform"
               onClick={() => {
                 setUpgradeReason('Odblokuj pełny potencjał MESSU BOUW');
                 setShowUpgradeDialog(true);
