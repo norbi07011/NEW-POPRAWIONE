@@ -32,6 +32,8 @@ export default function Invoices({ onNavigate }: InvoicesProps) {
   const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState('');
+  const [sortBy, setSortBy] = useState<'date' | 'number' | 'client' | 'amount'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const isMobile = useIsMobile();
 
   const licenseInfo = LicenseManager.getLicenseInfo();
@@ -62,10 +64,34 @@ export default function Invoices({ onNavigate }: InvoicesProps) {
   };
 
   const sortedInvoices = useMemo(() => {
-    return (invoices || []).sort((a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-  }, [invoices]);
+    if (!invoices) return [];
+    
+    const sorted = [...invoices].sort((a, b) => {
+      const clientA = clients?.find(c => c.id === a.client_id);
+      const clientB = clients?.find(c => c.id === b.client_id);
+      
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'date':
+          comparison = new Date(a.issue_date).getTime() - new Date(b.issue_date).getTime();
+          break;
+        case 'number':
+          comparison = a.invoice_number.localeCompare(b.invoice_number);
+          break;
+        case 'client':
+          comparison = (clientA?.name || '').localeCompare(clientB?.name || '');
+          break;
+        case 'amount':
+          comparison = a.total - b.total;
+          break;
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+    
+    return sorted;
+  }, [invoices, clients, sortBy, sortOrder]);
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
@@ -432,11 +458,37 @@ ${company?.name || ''}`;
         {/* Modern Invoices Card */}
         <div className="relative overflow-hidden rounded-2xl bg-white border-2 border-blue-200 shadow-lg hover:border-sky-300 hover:shadow-xl transition-all duration-300">
           <div className="relative p-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-black">{t('invoices.title')}</h2>
                 <p className="text-black">{t('invoices.allInvoices')}</p>
               </div>
+              
+              {/* Sortowanie */}
+              {sortedInvoices.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    title="Sorteer facturen"
+                    className="px-4 py-2 bg-white border-2 border-sky-200 rounded-lg font-medium text-black hover:border-sky-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 transition-all"
+                  >
+                    <option value="date">📅 Datum</option>
+                    <option value="number">🔢 Factuurnummer</option>
+                    <option value="client">👤 Klant</option>
+                    <option value="amount">💰 Bedrag</option>
+                  </select>
+                  
+                  <button
+                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                    className="px-4 py-2 bg-sky-100 hover:bg-sky-200 rounded-lg font-bold transition-all border-2 border-sky-200"
+                    title={sortOrder === 'asc' ? 'Oplopend' : 'Aflopend'}
+                  >
+                    {sortOrder === 'asc' ? '↑' : '↓'}
+                  </button>
+                </div>
+              )}
+              
               <div className="p-3 bg-sky-100 rounded-xl">
                 <FileText className="text-blue-700" size={24} />
               </div>
