@@ -1,97 +1,103 @@
-/* From Uiverse.io by Vosoone */ 
+/* Modern gradient loader */
 .main-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100%;
-  width: 100%;
+  height: 100vh;
+  width: 100vw;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
   overflow: hidden;
 }
 
 .loader {
-  width: 100%;
-  height: 100%;
+  width: 300px;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
 }
 
-#browser {
-  overflow: hidden;
+.loader svg {
+  width: 200px;
+  height: 200px;
+  filter: drop-shadow(0 0 20px rgba(102, 126, 234, 0.4));
 }
 
-.grid-line {
-  stroke: #222;
-  stroke-width: 0.5;
+/* Rings animation */
+.ring {
+  transform-origin: center;
+  animation: spin 3s linear infinite;
 }
 
-.browser-frame {
-  fill: #111;
-  stroke: #666;
-  stroke-width: 1;
-  filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.9));
+.ring-1 {
+  animation-duration: 3s;
 }
 
-.browser-top {
-  fill: #1a1a1a;
+.ring-2 {
+  animation-duration: 2s;
+  animation-direction: reverse;
 }
 
-.loading-text {
-  font-family: Haettenschweiler, sans-serif;
-  font-size: 14px;
-  fill: #e4e4e4;
+.ring-3 {
+  animation-duration: 1.5s;
 }
 
-.skeleton {
-  fill: #2d2d2d;
-  rx: 4;
-  ry: 4;
-  animation: pulse 1.8s ease-in-out infinite;
-  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.02));
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-@keyframes pulse {
-  0% {
-    fill: #2d2d2d;
+/* Glow effects */
+.glow {
+  animation: glow-fade 2s ease-in-out infinite;
+}
+
+.glow-pulse {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes glow-fade {
+  0%, 100% {
+    opacity: 0.2;
   }
   50% {
-    fill: #505050;
-  }
-  100% {
-    fill: #2d2d2d;
+    opacity: 0.5;
   }
 }
 
-.trace-flow {
-  stroke-width: 1;
-  fill: none;
-  stroke-dasharray: 120 600;
-  stroke-dashoffset: 720;
-  animation: flow 5s linear infinite;
-  opacity: 0.95;
-  stroke-linejoin: round;
-  filter: drop-shadow(0 0 8px currentColor) blur(0.5px);
-  color: #00ccff;
-}
-
-.trace-flow:nth-child(1) {
-  stroke: url(#traceGradient1);
-}
-
-.trace-flow:nth-child(2) {
-  stroke: url(#traceGradient2);
-}
-
-.trace-flow:nth-child(3) {
-  stroke: url(#traceGradient3);
-}
-
-.trace-flow:nth-child(4) {
-  stroke: url(#traceGradient4);
-}
-
-@keyframes flow {
-  from {
-    stroke-dashoffset: 720;
+@keyframes pulse-glow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
   }
-  to {
-    stroke-dashoffset: 0;
+  50% {
+    transform: scale(1.2);
+    opacity: 0.4;
+  }
+}
+
+/* Loading text */
+.loading-text-modern {
+  margin-top: 30px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: #ffffff;
+  text-transform: uppercase;
+  animation: text-fade 2s ease-in-out infinite;
+  text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+}
+
+@keyframes text-fade {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
   }
 }

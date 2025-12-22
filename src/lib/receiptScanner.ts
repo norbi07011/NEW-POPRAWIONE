@@ -9,6 +9,12 @@
  */
 
 import Tesseract from 'tesseract.js';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configure PDF.js worker - use CDN with https
+if (typeof window !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+}
 
 export interface ReceiptData {
   total?: number;           // Kwota całkowita
@@ -28,30 +34,93 @@ export interface ReceiptData {
 }
 
 /**
- * Skanuj paragon ze zdjęcia
+ * Wyodrębnij tekst z PDF faktury
+ */
+async function extractTextFromPDF(pdfFile: File): Promise<string> {
+  console.log('📄 Rozpoczynam czytanie PDF:', pdfFile.name);
+  console.log('📦 PDF.js version:', pdfjsLib.version);
+  console.log('🔧 Worker URL:', pdfjsLib.GlobalWorkerOptions.workerSrc);
+  
+  try {
+    // Convert File to ArrayBuffer
+    const arrayBuffer = await pdfFile.arrayBuffer();
+    console.log('✅ ArrayBuffer created, size:', arrayBuffer.byteLength, 'bytes');
+    
+    // Load PDF document
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    console.log(`📑 PDF załadowany: ${pdf.numPages} stron`);
+    
+    // Extract text from all pages
+    let fullText = '';
+    
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      
+      // Combine text items
+      const pageText = textContent.items
+        .map((item: any) => item.str)
+        .join(' ');
+      
+      fullText += pageText + '\n';
+      console.log(`✅ Strona ${pageNum}/${pdf.numPages} odczytana (${pageText.length} znaków)`);
+    }
+    
+    console.log('📝 Całkowity tekst z PDF:', fullText.length, 'znaków');
+    console.log('📝 Pierwsze 500 znaków:', fullText.substring(0, 500));
+    return fullText;
+    
+  } catch (error) {
+    console.error('❌ Błąd odczytu PDF:', error);
+    throw new Error('Nie udało się odczytać pliku PDF. Upewnij się, że to poprawny plik PDF z tekstem (nie skan obrazu).');
+  }
+}
+
+/**
+ * Skanuj paragon ze zdjęcia lub PDF
  */
 export async function scanReceipt(
-  imageFile: File,
+  file: File,
   language: 'pol' | 'nld' | 'eng' = 'pol',
   onProgress?: (progress: number) => void
 ): Promise<ReceiptData> {
   
-  console.log('📷 Rozpoczynam skanowanie paragonu:', imageFile.name);
+  console.log('📷 Rozpoczynam skanowanie:', file.name, 'Type:', file.type);
+  
+  // PDF handling
+  if (file.type === 'application/pdf') {
+    console.log('📄 Wykryto PDF - używam PDF.js');
+    
+    try {
+      const text = await extractTextFromPDF(file);
+      const receiptData = parseReceiptText(text);
+      receiptData.rawText = text;
+      receiptData.confidence = 95; // PDF extraction is reliable
+      
+      return receiptData;
+      
+    } catch (error) {
+      console.error('❌ Błąd czytania PDF:', error);
+      throw error;
+    }
+  }
+  
+  // Image OCR handling (existing code)
   
   // Walidacja rozmiaru pliku (max 10MB)
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-  if (imageFile.size > MAX_FILE_SIZE) {
-    throw new Error(`Plik jest za duży (${(imageFile.size / 1024 / 1024).toFixed(1)}MB). Maksymalny rozmiar to 10MB.`);
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(`Plik jest za duży (${(file.size / 1024 / 1024).toFixed(1)}MB). Maksymalny rozmiar to 10MB.`);
   }
   
   // Walidacja typu pliku
-  if (!imageFile.type.startsWith('image/')) {
+  if (!file.type.startsWith('image/')) {
     throw new Error('Niewłaściwy typ pliku. Wybierz zdjęcie (JPG, PNG, WEBP).');
   }
   
   try {
     // Rozpoznaj tekst z OCR
-    const result = await Tesseract.recognize(imageFile, language, {
+    const result = await Tesseract.recognize(file, language, {
       logger: (m) => {
         if (m.status === 'recognizing text' && onProgress) {
           onProgress(Math.round(m.progress * 100));
@@ -105,19 +174,45 @@ function parseReceiptText(text: string): ReceiptData {
 
   // --- KWOTA CAŁKOWITA ---
   // Szukaj wzorców: "TOTAL", "SUMA", "DO ZAPŁATY", "TOTAAL" (NL)
+  // ENHANCED: Lepiej toleruje OCR errors (Igtaal, [gtaal, E35.)
   const totalPatterns = [
-    /(?:total|suma|do zap.*|totaal|betalen|razem|podsumowanie)[:\s]*([0-9]+[.,][0-9]{2})/i,
-    /([0-9]+[.,][0-9]{2})\s*(?:total|suma|zł|eur|€)/i,
+    // Standard keywords + amount
+    /(?:to+[ta]+[la]*|suma|do zap.*|bet+a[la]*en|razem|podsumowanie)[:\s]*[€e]*\s*([0-9]+[.,][0-9]{2})/i,
+    // Amount + keyword (reverse)
+    /([0-9]+[.,][0-9]{2})\s*(?:to+[ta]+[la]*|suma|zł|eur|€)/i,
+    // Keyword na poprzedniej linii, kwota w następnej (max 3 linie)
+    /(?:to+[ta]+[la]*|suma|bet+a[la]*en).{0,50}\n.*?([0-9]+[.,][0-9]{2})/i,
   ];
+
+  const foundAmounts: number[] = [];
 
   for (const pattern of totalPatterns) {
     const match = text.match(pattern);
     if (match) {
       const amount = parseFloat(match[1].replace(',', '.'));
-      data.total = amount;
-      console.log('💰 Znaleziono kwotę:', amount);
-      break;
+      if (!isNaN(amount) && amount > 0.5) { // Ignore tiny amounts (round-off errors)
+        foundAmounts.push(amount);
+      }
     }
+  }
+
+  // FALLBACK: Jeśli nie znaleziono z keyword, znajdź wszystkie kwoty i weź największą
+  if (foundAmounts.length === 0) {
+    const allAmounts = text.match(/([0-9]+[.,][0-9]{2})/g);
+    if (allAmounts) {
+      for (const amt of allAmounts) {
+        const num = parseFloat(amt.replace(',', '.'));
+        if (!isNaN(num) && num > 3.0) { // Ignore VAT rates (21%) and small fees
+          foundAmounts.push(num);
+        }
+      }
+    }
+  }
+
+  // Wybierz największą kwotę (prawdopodobnie total, nie VAT rate)
+  if (foundAmounts.length > 0) {
+    data.total = Math.max(...foundAmounts);
+    console.log('💰 Znaleziono kwotę:', data.total, `(wybrano spośród: ${foundAmounts.join(', ')})`);
   }
 
   // --- DATA ---
@@ -181,20 +276,60 @@ function parseReceiptText(text: string): ReceiptData {
   }
 
   // --- NAZWA SKLEPU ---
-  // Zwykle na górze paragonu (pierwsze 3 linie)
-  const topLines = lines.slice(0, 3);
-  const possibleSuppliers = topLines
-    .filter(line => line.trim().length > 3)
-    .filter(line => !/^\d/.test(line.trim())) // Pomijaj linie zaczynające się od cyfr
-    .filter(line => !/(?:paragon|receipt|bon|kvitantie)/i.test(line)); // Pomijaj typowe nagłówki
+  // NAJPIERW próbuj rozpoznać znane sieci sklepów (najdokładniejsze)
+  // Sortuj od najdłuższych do najkrótszych (żeby "ALBERT HEIJN" było przed "AH")
+  const knownBrands = [
+    'HORNBACH BOUWMARKT', 'ALBERT HEIJN', 'TOTALENERGIES', 'MEDIA MARKT',
+    'BURGER KING', 'MCDONALDS', 'STARBUCKS', 'RESTAURANT',
+    'HORNBACH', 'BOUWMARKT', 'COOLBLUE', 'DECATHLON', 'KRUIDVAT',
+    'ACTION', 'JUMBO', 'LIDL', 'ALDI', 'PLUS', 'DIRK', 'IKEA',
+    'SHELL', 'TOTAL', 'ESSO', 'TEXACO', 'TINQ',
+    'BLOKKER', 'XENOS', 'PRAXIS', 'KARWEI', 'GAMMA',
+    'KFC', 'ETOS', 'HEMA', 'CAFE', 'HOTEL', 'LORR',
+    'BOL.COM', 'BP', 'AH', 'DA' // Krótkie na końcu
+  ];
 
-  if (possibleSuppliers.length > 0) {
-    // Weź najdłuższą linię (zwykle nazwa sklepu)
-    data.supplier = possibleSuppliers
-      .reduce((a, b) => a.length > b.length ? a : b)
-      .trim()
-      .substring(0, 100); // Max 100 znaków
-    console.log('🏪 Znaleziono sklep:', data.supplier);
+  const upperText = text.toUpperCase();
+  
+  for (const brand of knownBrands) {
+    // Sprawdź czy marka występuje jako CAŁE SŁOWO (nie fragment)
+    const regex = new RegExp(`\\b${brand.replace('.', '\\.')}\\b`, 'i');
+    if (regex.test(upperText)) {
+      data.supplier = brand;
+      console.log('🏪 Rozpoznano markę:', brand);
+      break;
+    }
+  }
+
+  // Jeśli nie znaleziono znanej marki, szukaj w pierwszych liniach
+  if (!data.supplier) {
+    // Zwykle na górze paragonu (pierwsze 8 linii)
+    const topLines = lines.slice(0, 8);
+    const possibleSuppliers = topLines
+      .filter(line => line.trim().length >= 3 && line.trim().length <= 50) // Min 3, max 50 znaków
+      .filter(line => !/^\d/.test(line.trim())) // Pomijaj linie zaczynające się od cyfr
+      .filter(line => !/(?:paragon|receipt|bon|kvitantie|klantenbon|datum|date|tijd|time)/i.test(line))
+      .filter(line => !/(?:adres|address|straat|tel|phone|www|http|btw|vat|filiaal)/i.test(line))
+      .filter(line => !/(?:station|pomp|pump|terminal|merchant)/i.test(line)) // Pomijaj numery stacji
+      .filter(line => !line.match(/[{}[\]()]/)) // Pomijaj linie ze specjalnymi znakami
+      .filter(line => !line.match(/[|_=]{2,}/)); // Pomijaj separatory
+
+    if (possibleSuppliers.length > 0) {
+      // Weź najdłuższą linię z pierwszych 3 (zwykle nazwa sklepu)
+      const bestMatch = possibleSuppliers
+        .slice(0, 3)
+        .reduce((a, b) => a.length > b.length ? a : b)
+        .trim()
+        .replace(/[®™©|_=*+]/g, '') // Usuń znaki specjalne
+        .replace(/\s+/g, ' ') // Normalizuj spacje
+        .substring(0, 50); // Max 50 znaków (było 100)
+      
+      // Jeśli nazwa ma przynajmniej 3 znaki i nie zawiera śmieci
+      if (bestMatch.length >= 3 && !bestMatch.match(/[{}[\]]{2,}/)) {
+        data.supplier = bestMatch;
+        console.log('🏪 Znaleziono sklep:', data.supplier);
+      }
+    }
   }
 
   // --- NUMER PARAGONU/FAKTURY ---

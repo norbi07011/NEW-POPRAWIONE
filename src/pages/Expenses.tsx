@@ -36,6 +36,9 @@ export default function Expenses() {
   // OCR scanning state
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
+  const [currentScanFile, setCurrentScanFile] = useState(''); // Nazwa aktualnie skanowanego pliku
+  const [totalScans, setTotalScans] = useState(0); // Liczba wszystkich paragonów do skanowania
+  const [completedScans, setCompletedScans] = useState(0); // Liczba ukończonych skanowań
   const scanInputRef = useRef<HTMLInputElement>(null);
   
   // NOWY STATE: Przełącznik "Kwota zawiera VAT"
@@ -170,59 +173,300 @@ export default function Expenses() {
     });
   };
 
-  // Obsługa dodawania zdjęć z galerii lub aparatu
+  // Obsługa dodawania zdjęć z galerii lub aparatu + AUTO OCR MULTI
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    try {
-      const newAttachments: ExpenseAttachment[] = [];
-      
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+    // Sprawdź czy to edycja - jeśli tak, użyj starego flow (tylko załączniki)
+    if (editingExpense) {
+      // TRYB EDYCJI - dodaj tylko jako załączniki
+      try {
+        const newAttachments: ExpenseAttachment[] = [];
         
-        // Sprawdź typ pliku
-        if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-          toast.error(`Plik ${file.name} nie jest obrazem ani PDF`);
-          continue;
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          
+          if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+            toast.error(`Plik ${file.name} nie jest obrazem ani PDF`);
+            continue;
+          }
+
+          const base64 = await fileToBase64(file);
+          const sequenceNumber = attachments.length + newAttachments.length + 1;
+          
+          const attachment: ExpenseAttachment = {
+            id: `att_${Date.now()}_${i}`,
+            expense_id: editingExpense.id,
+            file_name: file.name,
+            file_path: base64,
+            file_type: file.type.startsWith('image/') ? 'image' : 'pdf',
+            file_size: file.size,
+            sequence_number: sequenceNumber,
+            created_at: new Date().toISOString(),
+          };
+          
+          newAttachments.push(attachment);
+        }
+        
+        setAttachments([...attachments, ...newAttachments]);
+        toast.success(`✅ Dodano ${newAttachments.length} załącznik(ów)`);
+      } catch (error) {
+        console.error('Error adding attachments:', error);
+        toast.error(t('common.attachmentError'));
+      }
+      
+      if (event.target) event.target.value = '';
+      return;
+    }
+
+    // TRYB NOWY WYDATEK - skanuj wszystkie paragony (zdjęcia + PDF)
+    const scannableFiles = Array.from(files).filter(f => 
+      f.type.startsWith('image/') || f.type === 'application/pdf'
+    );
+    
+    if (scannableFiles.length === 0) {
+      toast.error('Wybierz przynajmniej jedno zdjęcie paragonu lub PDF faktury');
+      if (event.target) event.target.value = '';
+      return;
+    }
+
+    // ✅ NOWA LOGIKA: Jeśli TYLKO 1 PLIK → wypełnij formularz
+    if (scannableFiles.length === 1) {
+      const file = scannableFiles[0];
+      const isPDF = file.type === 'application/pdf';
+      toast.info(isPDF ? '📄 Odczytywanie PDF faktury...' : '📷 Rozpoznawanie tekstu z paragonu...');
+      
+      try {
+        const receiptData = await performOCRScan(file);
+        
+        // Walidacja kwoty
+        const amount = receiptData.total || receiptData.totalNet || 0;
+        if (amount === 0 || isNaN(amount)) {
+          toast.warning('⚠️ Nie wykryto kwoty z paragonu. Wypełnij ręcznie.');
+        }
+        
+        // Oblicz VAT
+        const vatRate = parseFloat(receiptData.vatRate?.toString() || '21');
+        let net: number, vat: number, gross: number;
+        
+        if (receiptData.total) {
+          const calc = calculateNetFromGross(amount, vatRate as VATRate);
+          net = calc.net;
+          vat = calc.vat;
+          gross = calc.gross;
+        } else {
+          const calc = calculateGrossFromNet(amount, vatRate as VATRate);
+          net = calc.net;
+          vat = calc.vat;
+          gross = calc.gross;
         }
 
-        // Konwertuj na base64
+        // Wygeneruj opis
+        const descriptionParts: string[] = [];
+        if (receiptData.supplier) descriptionParts.push(`Zakup w ${receiptData.supplier}`);
+        if (receiptData.date) {
+          const date = new Date(receiptData.date);
+          const dateStr = date.toLocaleDateString(i18n.language);
+          descriptionParts.push(`z dnia ${dateStr}`);
+        }
+
+        // ✅ WYPEŁNIJ FORMULARZ (zamiast tworzyć wydatek)
+        setFormData({
+          date: receiptData.date || new Date().toISOString().split('T')[0],
+          category: 'other' as ExpenseCategory,
+          supplier: receiptData.supplier || '',
+          description: descriptionParts.join(' ') || '',
+          amount_net: net.toFixed(2),
+          vat_rate: vatRate.toString(),
+          payment_method: 'card',
+          is_vat_deductible: true,
+          is_business_expense: true,
+          invoice_number: receiptData.invoiceNumber || '',
+          notes: `Automatycznie zeskanowany (${receiptData.confidence?.toFixed(0)}% pewności)`,
+        });
+
+        // Dodaj załącznik
         const base64 = await fileToBase64(file);
-        
-        // Oblicz numer sekwencyjny
-        const sequenceNumber = attachments.length + newAttachments.length + 1;
-        
         const attachment: ExpenseAttachment = {
-          id: `att_${Date.now()}_${i}`,
+          id: `att_${Date.now()}`,
           expense_id: editingExpense?.id || '',
           file_name: file.name,
           file_path: base64,
-          file_type: file.type.startsWith('image/') ? 'image' : 'pdf',
+          file_type: file.type === 'application/pdf' ? 'pdf' : 'image',
           file_size: file.size,
-          sequence_number: sequenceNumber,
+          sequence_number: attachments.length + 1,
           created_at: new Date().toISOString(),
         };
+        setAttachments([attachment]);
+
+        toast.success(`✅ Dane wypełnione z paragonu! Sprawdź i zapisz.`);
         
-        newAttachments.push(attachment);
+        if (event.target) event.target.value = '';
+        return;
+        
+      } catch (error) {
+        console.error('OCR Error:', error);
+        toast.error('❌ Nie udało się zeskanować paragonu');
+        if (event.target) event.target.value = '';
+        return;
       }
-      
-      setAttachments([...attachments, ...newAttachments]);
-      toast.success(`Dodano ${newAttachments.length} załącznik(ów)`);
-      
-      // Reset input
-      if (event.target) {
-        event.target.value = '';
-      }
-    } catch (error) {
-      console.error('Error adding attachments:', error);
-      toast.error(t('common.attachmentError'));
     }
+
+    // ✅ BATCH MODE: Więcej niż 1 plik → utwórz wydatki automatycznie
+
+    // Rozpocznij batch scanning
+    setIsScanning(true);
+    setTotalScans(scannableFiles.length);
+    setCompletedScans(0);
+    
+    const successfulScans: string[] = [];
+    const failedScans: string[] = [];
+
+    toast.info(`🔍 Rozpoczynam skanowanie ${scannableFiles.length} plików (paragony/faktury)...`, { duration: 3000 });
+
+    for (let i = 0; i < scannableFiles.length; i++) {
+      const file = scannableFiles[i];
+      setCurrentScanFile(file.name);
+      setScanProgress(0);
+
+      try {
+        // Skanuj paragon
+        const receiptData = await performOCRScan(file);
+        
+        // ✅ WALIDACJA - Nie twórz wydatku jeśli brak kwoty
+        const amount = receiptData.total || receiptData.totalNet || 0;
+        
+        if (amount === 0 || isNaN(amount)) {
+          console.warn(`⚠️ Pominięto ${file.name} - nie wykryto kwoty`);
+          failedScans.push(file.name + ' (brak kwoty)');
+          setCompletedScans(prev => prev + 1);
+          continue; // Pomiń ten paragon
+        }
+        
+        // Przygotuj dane wydatku
+        const vatRate = parseFloat(receiptData.vatRate?.toString() || '21');
+        
+        let net: number, vat: number, gross: number;
+        
+        if (receiptData.total) {
+          // Mamy kwotę brutto
+          const calc = calculateNetFromGross(amount, vatRate as VATRate);
+          net = calc.net;
+          vat = calc.vat;
+          gross = calc.gross;
+        } else {
+          // Mamy kwotę netto
+          const calc = calculateGrossFromNet(amount, vatRate as VATRate);
+          net = calc.net;
+          vat = calc.vat;
+          gross = calc.gross;
+        }
+
+        // Wygeneruj opis
+        const descriptionParts: string[] = [];
+        if (receiptData.supplier) descriptionParts.push(`Zakup w ${receiptData.supplier}`);
+        if (receiptData.date) {
+          const date = new Date(receiptData.date);
+          const dateStr = date.toLocaleDateString(i18n.language);
+          descriptionParts.push(`z dnia ${dateStr}`);
+        }
+        if (receiptData.invoiceNumber) descriptionParts.push(`- paragon ${receiptData.invoiceNumber}`);
+
+        // Utwórz załącznik
+        const base64 = await fileToBase64(file);
+        const attachment: ExpenseAttachment = {
+          id: `att_${Date.now()}_${i}`,
+          expense_id: '',
+          file_name: file.name,
+          file_path: base64,
+          file_type: file.type === 'application/pdf' ? 'pdf' : 'image',
+          file_size: file.size,
+          sequence_number: 1,
+          created_at: new Date().toISOString(),
+        };
+
+        // Utwórz wydatek
+        const expenseData = {
+          date: receiptData.date || new Date().toISOString().split('T')[0],
+          category: 'other' as ExpenseCategory,
+          supplier: receiptData.supplier || `Sklep ${i + 1}`,
+          description: descriptionParts.join(' ') || `Paragon ${i + 1}`,
+          amount_net: net,
+          vat_rate: vatRate,
+          vat_amount: vat,
+          amount_gross: gross,
+          currency: 'EUR',
+          payment_method: 'card',
+          is_vat_deductible: true,
+          is_business_expense: true,
+          invoice_number: receiptData.invoiceNumber || '',
+          notes: `Automatycznie zeskanowany (${receiptData.confidence?.toFixed(0)}% pewności)`,
+          attachments: [attachment],
+        };
+
+        // Zapisz wydatek
+        await createExpense(expenseData);
+        successfulScans.push(receiptData.supplier || file.name);
+        setCompletedScans(prev => prev + 1);
+
+      } catch (error) {
+        console.error(`Błąd skanowania ${file.name}:`, error);
+        failedScans.push(file.name);
+        setCompletedScans(prev => prev + 1);
+      }
+    }
+
+    // Podsumowanie
+    setIsScanning(false);
+    setTotalScans(0);
+    setCompletedScans(0);
+    setCurrentScanFile('');
+
+    if (successfulScans.length > 0) {
+      toast.success(
+        `✅ Utworzono ${successfulScans.length} wydatków:\n${successfulScans.slice(0, 5).join('\n')}${successfulScans.length > 5 ? '\n...' : ''}`,
+        { duration: 6000 }
+      );
+    }
+
+    if (failedScans.length > 0) {
+      toast.error(
+        `❌ Nie udało się zeskanować ${failedScans.length} paragonów:\n${failedScans.slice(0, 3).join('\n')}`,
+        { duration: 5000 }
+      );
+    }
+    
+    if (event.target) event.target.value = '';
   };
 
   // ==================== OCR SCANNING ====================
   /**
-   * Skanuj paragon ze zdjęcia i automatycznie wypełnij formularz
+   * Główna funkcja OCR - skanuje paragon i ZWRACA dane (nie wypełnia formularza)
+   */
+  const performOCRScan = async (file: File): Promise<ReceiptData> => {
+    try {
+      // Wykryj język na podstawie ustawień
+      const language = i18n.language === 'pl' ? 'pol' : i18n.language === 'nl' ? 'nld' : 'eng';
+      
+      // Skanuj paragon z OCR
+      const receiptData: ReceiptData = await scanReceipt(
+        file,
+        language,
+        (progress) => setScanProgress(progress)
+      );
+
+      console.log('📝 Dane z paragonu:', receiptData);
+      return receiptData;
+
+    } catch (error) {
+      console.error('OCR Error:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Handler dla ręcznego przycisku "Skanuj Paragon"
    */
   const handleScanReceipt = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -236,122 +480,27 @@ export default function Expenses() {
       return;
     }
 
-    setIsScanning(true);
-    setScanProgress(0);
+    toast.info('📷 Rozpoznawanie tekstu z paragonu...');
+    await performOCRScan(file);
 
-    try {
-      toast.info('📷 Rozpoznawanie tekstu z paragonu...');
+    // Dodaj jako załącznik jeśli jeszcze nie został dodany
+    const base64 = await fileToBase64(file);
+    const attachment: ExpenseAttachment = {
+      id: `att_${Date.now()}`,
+      expense_id: editingExpense?.id || '',
+      file_name: file.name,
+      file_path: base64,
+      file_type: file.type === 'application/pdf' ? 'pdf' : 'image',
+      file_size: file.size,
+      sequence_number: attachments.length + 1,
+      created_at: new Date().toISOString(),
+    };
+    
+    setAttachments([...attachments, attachment]);
 
-      // Wykryj język na podstawie ustawień
-      const language = i18n.language === 'pl' ? 'pol' : i18n.language === 'nl' ? 'nld' : 'eng';
-      
-      // Skanuj paragon z OCR
-      const receiptData: ReceiptData = await scanReceipt(
-        file,
-        language,
-        (progress) => setScanProgress(progress)
-      );
-
-      console.log('📝 Dane z paragonu:', receiptData);
-
-      // Automatyczne wypełnienie formularza
-      if (receiptData.total || receiptData.totalNet) {
-        // Preferuj total (brutto) jeśli dostępne
-        const amount = receiptData.total || receiptData.totalNet || 0;
-        setFormData(prev => ({
-          ...prev,
-          amount_net: amount.toFixed(2),
-        }));
-        
-        // Ustaw przełącznik VAT
-        if (receiptData.total) {
-          setAmountIncludesVAT(true); // Kwota zawiera VAT
-        } else {
-          setAmountIncludesVAT(false); // Kwota netto
-        }
-      }
-
-      if (receiptData.vatRate) {
-        setFormData(prev => ({
-          ...prev,
-          vat_rate: receiptData.vatRate!.toString(),
-        }));
-      }
-
-      if (receiptData.date) {
-        setFormData(prev => ({
-          ...prev,
-          date: receiptData.date!,
-        }));
-      }
-
-      if (receiptData.supplier) {
-        setFormData(prev => ({
-          ...prev,
-          supplier: receiptData.supplier!,
-        }));
-      }
-
-      if (receiptData.invoiceNumber) {
-        setFormData(prev => ({
-          ...prev,
-          invoice_number: receiptData.invoiceNumber!,
-        }));
-      }
-
-      // Dodaj paragon jako załącznik
-      const base64 = await fileToBase64(file);
-      const attachment: ExpenseAttachment = {
-        id: `att_${Date.now()}`,
-        expense_id: editingExpense?.id || '',
-        file_name: file.name,
-        file_path: base64,
-        file_type: 'image',
-        file_size: file.size,
-        sequence_number: attachments.length + 1,
-        created_at: new Date().toISOString(),
-      };
-      
-      setAttachments([...attachments, attachment]);
-
-      // Pokaż wyniki
-      const confidence = receiptData.confidence || 0;
-      const fields = [
-        receiptData.total && `💰 Kwota: ${receiptData.total.toFixed(2)}`,
-        receiptData.date && `📅 Data: ${receiptData.date}`,
-        receiptData.supplier && `🏪 Sklep: ${receiptData.supplier}`,
-        receiptData.vatRate && `📊 VAT: ${receiptData.vatRate}%`,
-      ].filter(Boolean).join('\n');
-
-      if (confidence < 50) {
-        toast.warning(
-          `⚠️ Niska pewność rozpoznania (${confidence.toFixed(0)}%)\n\n${fields}\n\nSprawdź i popraw dane ręcznie.`,
-          { duration: 6000 }
-        );
-      } else {
-        toast.success(
-          `✅ Paragon zeskanowany (pewność ${confidence.toFixed(0)}%)\n\n${fields}`,
-          { duration: 5000 }
-        );
-      }
-
-      // Reset input
-      if (event.target) {
-        event.target.value = '';
-      }
-
-    } catch (error) {
-      console.error('OCR Error:', error);
-      
-      // Użyj profesjonalnej obsługi błędów
-      showError(error, {
-        action: 'OCR Scanning',
-        fileName: file.name,
-        fileSize: file.size,
-      });
-    } finally {
-      setIsScanning(false);
-      setScanProgress(0);
+    // Reset input
+    if (event.target) {
+      event.target.value = '';
     }
   };
   // ==================== END OCR SCANNING ====================
@@ -716,47 +865,75 @@ export default function Expenses() {
                         type="button"
                         variant="default"
                         size="sm"
-                        onClick={() => scanInputRef.current?.click()}
+                        onClick={() => {
+                          fileInputRef.current?.click(); // Zmienione: fileInputRef zamiast cameraInputRef (PDF support)
+                        }}
                         disabled={isScanning}
                         className="flex items-center gap-2 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                        title="Automatycznie odczytaj dane z paragonu (OCR)"
-                        aria-label="Skanuj paragon z rozpoznawaniem tekstu OCR"
+                        title="Dodaj wiele paragonów/faktur - automatycznie utworzy osobne wydatki"
+                        aria-label="Skanuj wiele paragonów lub PDF faktur jednocześnie"
                       >
                         {isScanning ? (
                           <>
                             <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                            {scanProgress > 0 ? `${scanProgress}%` : 'Skanowanie...'}
+                            {completedScans > 0 && totalScans > 0 ? (
+                              `${completedScans}/${totalScans} paragonów`
+                            ) : scanProgress > 0 ? (
+                              `${scanProgress}%`
+                            ) : (
+                              'Skanowanie...'
+                            )}
                           </>
                         ) : (
                           <>
                             <Scan size={18} weight="bold" />
-                            Skanuj Paragon OCR
+                            Skanuj (Zdjęcie/PDF)
                           </>
                         )}
                       </Button>
+                      
+                      {/* Progress bar gdy skanowanie wielu */}
+                      {isScanning && totalScans > 1 && (
+                        <div className="col-span-full mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-semibold text-blue-900">
+                              Skanowanie {completedScans}/{totalScans} paragonów
+                            </span>
+                            <span className="text-xs text-blue-700">
+                              {currentScanFile && `📄 ${currentScanFile.substring(0, 20)}...`}
+                            </span>
+                          </div>
+                          <div className="w-full bg-blue-200 rounded-full h-2">
+                            <div 
+                              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${(completedScans / totalScans) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
                       
                       {/* Input dla OCR scanning */}
                       <input
                         ref={scanInputRef}
                         type="file"
-                        accept="image/*"
+                        accept="image/*,application/pdf"
                         onChange={handleScanReceipt}
                         className="hidden"
-                        aria-label="Skanuj paragon z OCR"
-                        title="Automatycznie odczytaj dane z paragonu"
+                        aria-label="Skanuj paragon z OCR lub PDF"
+                        title="Automatycznie odczytaj dane z paragonu (zdjęcie lub PDF)"
                       />
                       
                       {/* Input dla aparatu (capture="environment" aktywuje tylną kamerę) */}
                       <input
                         ref={cameraInputRef}
                         type="file"
-                        accept="image/*"
+                        accept="image/*,application/pdf"
                         capture="environment"
                         multiple
                         onChange={handleFileSelect}
                         className="hidden"
-                        aria-label="Zrób zdjęcie wydatku"
-                        title="Zrób zdjęcie wydatku"
+                        aria-label="Zrób zdjęcie wydatku lub wybierz PDF"
+                        title="Zrób zdjęcie wydatku lub wybierz PDF"
                       />
                       
                       {/* Input dla galerii/plików */}
