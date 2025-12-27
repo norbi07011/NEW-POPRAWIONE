@@ -14,6 +14,7 @@ import { formatCurrency, formatDate } from '@/lib/invoice-utils';
 import { toast } from 'sonner';
 import { generateInvoicePDF, generateMobilePDF } from '@/lib/pdf-generator';
 import { exportToCSV, exportToJSON, exportToExcel, exportToXML } from '@/lib/export-utils';
+import { exportToUBL, exportToSAFT, exportAccountingCSV, downloadFile } from '@/lib/accounting-export';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { LicenseManager } from '@/services/LicenseManager';
 import { UpgradeDialog } from '@/components/UpgradeDialog';
@@ -201,13 +202,62 @@ export default function Invoices({ onNavigate }: InvoicesProps) {
     }
   };
 
+  const handleExportUBL = async (invoice: Invoice) => {
+    const client = clients?.find(c => c.id === invoice.client_id);
+    if (!client || !company) {
+      toast.error('Brak danych klienta lub firmy');
+      return;
+    }
+    try {
+      const xml = exportToUBL(invoice, company, client);
+      downloadFile(xml, `${invoice.invoice_number}_UBL.xml`, 'application/xml');
+      toast.success('✅ E-faktura UBL wyeksportowana (gotowa do Peppol/EU)');
+    } catch (error) {
+      toast.error('Błąd eksportu UBL');
+      console.error(error);
+    }
+  };
+
+  const handleExportAccountingCSV = async () => {
+    if (!invoices || !clients) {
+      toast.error('Brak faktur do eksportu');
+      return;
+    }
+    try {
+      const csv = exportAccountingCSV(sortedInvoices, clients);
+      downloadFile(csv, `faktury_ksiegowosc_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv;charset=utf-8');
+      toast.success('✅ Export księgowy CSV wygenerowany');
+    } catch (error) {
+      toast.error('Błąd eksportu CSV');
+      console.error(error);
+    }
+  };
+
+  const handleExportSAFT = async () => {
+    if (!invoices || !clients || !company) {
+      toast.error('Brak danych do eksportu SAF-T');
+      return;
+    }
+    try {
+      const startDate = new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0];
+      const endDate = new Date().toISOString().split('T')[0];
+      const xml = exportToSAFT(sortedInvoices, company, clients, startDate, endDate);
+      downloadFile(xml, `SAF-T_${new Date().getFullYear()}.xml`, 'application/xml');
+      toast.success('✅ SAF-T wygenerowany (gotowy dla urzędu skarbowego)');
+    } catch (error) {
+      toast.error('Błąd eksportu SAF-T');
+      console.error(error);
+    }
+  };
+
   const handleMarkPaid = async (invoiceId: string) => {
     try {
       const invoice = invoices.find(inv => inv.id === invoiceId);
       if (invoice) {
         await updateInvoice(invoiceId, { 
           ...invoice, 
-          status: 'paid' as const, 
+          status: 'paid' as const,
+          paid_date: new Date().toISOString(),
           updated_at: new Date().toISOString() 
         });
         toast.success(t('invoices.markedPaid'));
@@ -506,13 +556,37 @@ ${company?.name || ''}`;
             <p className="text-xl lg:text-2xl text-black mb-8 font-medium">
               Beheer al uw facturen op één plek
             </p>
-            <button 
-              onClick={handleCreateInvoice}
-              className="px-10 py-5 bg-linear-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-2xl font-black text-lg shadow-lg hover:shadow-xl border-2 border-blue-200 transition-all duration-300 hover:scale-105 flex items-center gap-3 w-fit"
-            >
-              <Plus size={24} weight="bold" />
-              Nieuwe factuur
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button 
+                onClick={handleCreateInvoice}
+                className="px-10 py-5 bg-linear-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-2xl font-black text-lg shadow-lg hover:shadow-xl border-2 border-blue-200 transition-all duration-300 hover:scale-105 flex items-center gap-3"
+              >
+                <Plus size={24} weight="bold" />
+                Nieuwe factuur
+              </button>
+              
+              {sortedInvoices.length > 0 && (
+                <>
+                  <button
+                    onClick={handleExportAccountingCSV}
+                    className="px-6 py-5 bg-white hover:bg-green-50 text-green-700 rounded-2xl font-bold text-base shadow-lg hover:shadow-xl border-2 border-green-300 hover:border-green-400 transition-all duration-300 flex items-center gap-2"
+                    title="Export naar boekhoudprogramma (CSV)"
+                  >
+                    <FileCode size={20} />
+                    📊 CSV Boekhouding
+                  </button>
+                  
+                  <button
+                    onClick={handleExportSAFT}
+                    className="px-6 py-5 bg-white hover:bg-purple-50 text-purple-700 rounded-2xl font-bold text-base shadow-lg hover:shadow-xl border-2 border-purple-300 hover:border-purple-400 transition-all duration-300 flex items-center gap-2"
+                    title="Export SAF-T (Belastingdienst)"
+                  >
+                    <FileCode size={20} />
+                    🏛️ SAF-T
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -900,6 +974,11 @@ ${company?.name || ''}`;
                                     <DropdownMenuItem onClick={() => handleExportXML(invoice)}>
                                       <FileCode className="mr-2" size={16} />
                                       {t('invoices.exportXML')}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => handleExportUBL(invoice)}>
+                                      <FileCode className="mr-2" size={16} />
+                                      📄 E-Faktura UBL (EU/Peppol)
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>

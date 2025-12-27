@@ -61,6 +61,7 @@ export interface Invoice {
   due_date: string;
   currency: string;
   status: InvoiceStatus;
+  paid_date?: string; // Data faktycznej płatności
   total_net: number;
   total_vat: number;
   total_gross: number;
