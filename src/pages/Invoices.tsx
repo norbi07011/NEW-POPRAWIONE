@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Plus, FileText, DownloadSimple, CheckCircle, FilePdf, FileCsv, FileCode, FileXls, Trash, PencilSimple, Eye, EnvelopeSimple, DotsThree, WhatsappLogo, ArrowLeft, ArrowRight, Crown, Buildings } from '@phosphor-icons/react';
+import { Plus, FileText, DownloadSimple, CheckCircle, FilePdf, FileCsv, FileCode, FileXls, Trash, PencilSimple, Eye, EnvelopeSimple, DotsThree, WhatsappLogo, ArrowLeft, ArrowRight, Crown, Buildings, Printer } from '@phosphor-icons/react';
 import { Invoice, Client, Company } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/invoice-utils';
 import { toast } from 'sonner';
@@ -324,6 +324,42 @@ UWAGA: Faktura została pobrana jako plik HTML/PDF. Proszę załączyć ją ręc
     }
   };
 
+  const handlePrintInvoice = async (invoice: Invoice) => {
+    const client = clients?.find(c => c.id === invoice.client_id);
+    
+    if (!client) {
+      toast.error('❌ Geen klantgegevens. Voeg eerst een klant toe aan de factuur.');
+      return;
+    }
+    
+    if (!company) {
+      toast.error('❌ Geen bedrijfsgegevens. Ga naar Instellingen en vul uw bedrijfsgegevens in.');
+      return;
+    }
+
+    try {
+      console.log('🖨️ PRINT INVOICE START:', invoice.invoice_number);
+      
+      // Wygeneruj HTML faktury używając tej samej funkcji co PDF
+      await generateInvoicePDF(invoice, company, client, invoice.lines, i18n.language, selectedTemplateId || 'classic');
+      
+      // Metoda window.print() - kompatybilna z mobile i desktop
+      toast.loading('🖨️ Voorbereiden van afdrukvoorbeeld...', { duration: 1500 });
+      
+      setTimeout(() => {
+        window.print();
+        toast.success('✅ Afdrukvenster geopend', {
+          duration: 3000,
+        });
+      }, 1000);
+      
+    } catch (error: any) {
+      const errorMsg = error?.message || 'Nieznany błąd';
+      toast.error(`❌ Fout bij afdrukken: ${errorMsg}`);
+      console.error('Print Invoice Error:', error);
+    }
+  };
+
   const handleSendWhatsApp = async (invoice: Invoice) => {
     const client = clients?.find(c => c.id === invoice.client_id);
     if (!client) {
@@ -619,6 +655,15 @@ ${company?.name || ''}`;
                                   )}
                                 </DialogContent>
                               </Dialog>
+                                {/* Print Invoice */}
+                                <button
+                                  onClick={() => handlePrintInvoice(invoice)}
+                                  className="p-2 bg-sky-100 hover:bg-sky-200 rounded-xl transition-colors duration-200"
+                                  title="Print factuur"
+                                >
+                                  <Printer className="text-blue-700 pointer-events-none" size={18} />
+                                </button>
+
                                 {/* WhatsApp */}
                                 <button
                                   onClick={() => handleSendWhatsApp(invoice)}
@@ -640,6 +685,10 @@ ${company?.name || ''}`;
                                   <DropdownMenuItem onClick={() => handleEditInvoice(invoice.id)}>
                                     <PencilSimple className="mr-2 pointer-events-none" size={16} />
                                     {t('common.edit')}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handlePrintInvoice(invoice)}>
+                                    <Printer className="mr-2 pointer-events-none" size={16} />
+                                    Print factuur
                                   </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handleGeneratePDF(invoice)}>
                                     <FilePdf className="mr-2 pointer-events-none" size={16} />
@@ -770,6 +819,15 @@ ${company?.name || ''}`;
                                     </div>
                                   </DialogContent>
                                 </Dialog>
+
+                                {/* Print Invoice */}
+                                <button
+                                  onClick={() => handlePrintInvoice(invoice)}
+                                  className="p-2 bg-sky-100 hover:bg-sky-200 rounded-xl transition-colors duration-200"
+                                  title="Print factuur"
+                                >
+                                  <Printer className="text-blue-700 pointer-events-none" size={18} />
+                                </button>
 
                                 {/* Send WhatsApp */}
                                 <button

@@ -90,6 +90,7 @@ export default {
       sendWhatsApp: 'Send WhatsApp',
       more: 'More',
       downloadPDF: 'Download PDF',
+      printInvoice: 'Print invoice',
       editInvoice: 'Edit invoice',
       downloadInvoice: 'Download invoice (PDF/HTML/Excel)',
       downloadPDFHTML: 'Download PDF/HTML',

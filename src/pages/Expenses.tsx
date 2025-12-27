@@ -42,7 +42,7 @@ export default function Expenses() {
   const scanInputRef = useRef<HTMLInputElement>(null);
   
   // NOWY STATE: Przełącznik "Kwota zawiera VAT"
-  const [amountIncludesVAT, setAmountIncludesVAT] = useState(true); // Domyślnie TRUE (kwota z rachunku)
+  const [amountIncludesVAT, setAmountIncludesVAT] = useState(false); // Domyślnie FALSE (wpisz NETTO z paragonu)
   
   // Form state
   const [formData, setFormData] = useState({
@@ -61,18 +61,18 @@ export default function Expenses() {
 
   // Calculate amounts - NOWA LOGIKA z przełącznikiem VAT
   const calculateAmounts = (amount: number, vatRate: number) => {
-    // SCENARIUSZ 1: Kwota ZAWIERA VAT (z rachunku) - ODLICZ VAT
-    if (amountIncludesVAT) {
-      const result = calculateNetFromGross(amount, vatRate as VATRate);
+    // SCENARIUSZ 1: Kwota NETTO (z paragonu) - DODAJ VAT ← DOMYŚLNE!
+    if (!amountIncludesVAT) {
+      const result = calculateGrossFromNet(amount, vatRate as VATRate);
       return {
         net: result.net,
         vat: result.vat,
         gross: result.gross,
       };
     }
-    // SCENARIUSZ 2: Kwota NETTO (bez VAT) - DODAJ VAT
+    // SCENARIUSZ 2: Kwota BRUTTO (z rachunku) - ODLICZ VAT
     else {
-      const result = calculateGrossFromNet(amount, vatRate as VATRate);
+      const result = calculateNetFromGross(amount, vatRate as VATRate);
       return {
         net: result.net,
         vat: result.vat,
@@ -702,18 +702,6 @@ export default function Expenses() {
                         <input
                           type="radio"
                           name="vatMode"
-                          checked={amountIncludesVAT}
-                          onChange={() => setAmountIncludesVAT(true)}
-                          className="w-4 h-4 text-blue-600"
-                        />
-                        <span className={`text-sm ${amountIncludesVAT ? 'font-bold text-blue-900' : 'text-black'}`}>
-                          {t('expenses.amountIncludesVat')}
-                        </span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="vatMode"
                           checked={!amountIncludesVAT}
                           onChange={() => setAmountIncludesVAT(false)}
                           className="w-4 h-4 text-blue-600"
@@ -722,9 +710,21 @@ export default function Expenses() {
                           {t('expenses.amountNetOnly')}
                         </span>
                       </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="vatMode"
+                          checked={amountIncludesVAT}
+                          onChange={() => setAmountIncludesVAT(true)}
+                          className="w-4 h-4 text-blue-600"
+                        />
+                        <span className={`text-sm ${amountIncludesVAT ? 'font-bold text-blue-900' : 'text-black'}`}>
+                          {t('expenses.amountIncludesVat')}
+                        </span>
+                      </label>
                     </div>
                     <p className="text-xs text-black mt-2">
-                      {amountIncludesVAT 
+                      {!amountIncludesVAT 
                         ? t('expenses.exampleIkea')
                         : t('expenses.exampleNetAmount')
                       }
@@ -733,17 +733,17 @@ export default function Expenses() {
 
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <Label>{amountIncludesVAT ? t('expenses.amountGross') : t('expenses.amountNet')}</Label>
+                      <Label>{!amountIncludesVAT ? t('expenses.amountNet') : t('expenses.amountGross')}</Label>
                       <Input
                         type="number"
                         step="0.01"
                         value={formData.amount_net}
                         onChange={(e) => setFormData({ ...formData, amount_net: e.target.value })}
-                        placeholder={amountIncludesVAT ? '193.60' : '160.00'}
+                        placeholder={!amountIncludesVAT ? '68.62' : '83.03'}
                         required
                       />
                       <p className="text-xs text-black mt-1">
-                        {amountIncludesVAT ? '(kwota z rachunku)' : '(kwota bez VAT)'}
+                        {!amountIncludesVAT ? '(kwota netto z paragonu)' : '(kwota brutto z paragonu)'}
                       </p>
                     </div>
                     
@@ -766,7 +766,7 @@ export default function Expenses() {
                     
                     <div>
                       <Label>
-                        {amountIncludesVAT ? 'Netto (obliczone)' : 'Brutto (obliczone)'}
+                        {!amountIncludesVAT ? 'Brutto (obliczone)' : 'Netto (obliczone)'}
                       </Label>
                       <Input
                         type="text"
@@ -775,9 +775,9 @@ export default function Expenses() {
                             const amount = parseFloat(formData.amount_net);
                             const rate = parseFloat(formData.vat_rate);
                             const result = calculateAmounts(amount, rate);
-                            return amountIncludesVAT 
-                              ? `${result.net.toFixed(2)} € (netto)` 
-                              : `${result.gross.toFixed(2)} € (brutto)`;
+                            return !amountIncludesVAT 
+                              ? `${result.gross.toFixed(2)} € (brutto)` 
+                              : `${result.net.toFixed(2)} € (netto)`;
                           })() : 
                           '0.00 €'
                         }
