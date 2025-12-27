@@ -680,14 +680,6 @@ ${company?.name || ''}`;
                                   )}
                                 </DialogContent>
                               </Dialog>
-                                {/* Print Invoice */}
-                                <button
-                                  onClick={() => handlePrintInvoice(invoice)}
-                                  className="p-2 bg-sky-100 hover:bg-sky-200 rounded-xl transition-colors duration-200"
-                                  title="Print factuur"
-                                >
-                                  <Printer className="text-blue-700 pointer-events-none" size={18} />
-                                </button>
 
                                 {/* WhatsApp */}
                                 <button
@@ -845,15 +837,6 @@ ${company?.name || ''}`;
                                   </DialogContent>
                                 </Dialog>
 
-                                {/* Print Invoice */}
-                                <button
-                                  onClick={() => handlePrintInvoice(invoice)}
-                                  className="p-2 bg-sky-100 hover:bg-sky-200 rounded-xl transition-colors duration-200"
-                                  title="Print factuur"
-                                >
-                                  <Printer className="text-blue-700 pointer-events-none" size={18} />
-                                </button>
-
                                 {/* Send WhatsApp */}
                                 <button
                                   onClick={() => handleSendWhatsApp(invoice)}
@@ -892,6 +875,11 @@ ${company?.name || ''}`;
                                     </button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="bg-white/95 backdrop-blur-sm border border-white/30">
+                                    <DropdownMenuItem onClick={() => handlePrintInvoice(invoice)}>
+                                      <Printer className="mr-2" size={16} />
+                                      {t('invoices.printInvoice')}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
                                     <DropdownMenuItem onClick={() => handleGeneratePDF(invoice)}>
                                       <FilePdf className="mr-2" size={16} />
                                       {t('invoices.downloadPDFHTML')}
