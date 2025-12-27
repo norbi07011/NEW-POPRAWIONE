@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, PencilSimple, Trash, DownloadSimple, Receipt, CreditCard, Camera, Image as ImageIcon, X, Scan } from '@phosphor-icons/react';
+import { Plus, PencilSimple, Trash, DownloadSimple, Receipt, CreditCard, Camera, Image as ImageIcon, X, Scan, Upload } from '@phosphor-icons/react';
 import { Expense, EXPENSE_CATEGORIES, ExpenseCategory, ExpenseAttachment } from '@/types/expenses';
 import { formatCurrency, formatDate } from '@/lib/invoice-utils';
 import { calculateNetFromGross, calculateGrossFromNet, type VATRate } from '@/lib/vat-calculator';
@@ -32,6 +32,7 @@ export default function Expenses() {
   const [attachments, setAttachments] = useState<ExpenseAttachment[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const csvImportInputRef = useRef<HTMLInputElement>(null);
   
   // OCR scanning state
   const [isScanning, setIsScanning] = useState(false);
@@ -596,6 +597,100 @@ export default function Expenses() {
     toast.success('Eksport CSV gotowy');
   };
 
+  const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const lines = text.split('\n').filter(line => line.trim());
+      
+      if (lines.length < 2) {
+        toast.error('❌ Plik CSV musi mieć nagłówki i przynajmniej 1 wiersz');
+        return;
+      }
+
+      // Parsuj nagłówki (usuń BOM jeśli istnieje)
+      const headers = lines[0].replace(/^\uFEFF/, '').split(',').map(h => h.trim());
+      
+      // Sprawdź czy są wymagane kolumny
+      const requiredColumns = ['Data', 'Dostawca', 'Netto', 'VAT', 'Brutto'];
+      const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+      
+      if (missingColumns.length > 0) {
+        toast.error(`❌ Brakujące kolumny: ${missingColumns.join(', ')}`);
+        return;
+      }
+
+      let imported = 0;
+      let errors = 0;
+
+      // Importuj wiersze
+      for (let i = 1; i < lines.length; i++) {
+        try {
+          const values = lines[i].split(',').map(v => v.trim());
+          const row: Record<string, string> = {};
+          headers.forEach((header, index) => {
+            row[header] = values[index] || '';
+          });
+
+          // Mapuj kategorię z emoji na kod
+          let categoryCode: ExpenseCategory = 'it_software';
+          const categoryText = row['Kategoria'] || '';
+          
+          // Znajdź kategorię po nazwie/emoji
+          for (const [key, cat] of Object.entries(EXPENSE_CATEGORIES)) {
+            if (categoryText.includes(cat.name) || categoryText.includes(cat.emoji)) {
+              categoryCode = key as ExpenseCategory;
+              break;
+            }
+          }
+
+          const expenseData = {
+            date: row['Data'] || new Date().toISOString().split('T')[0],
+            category: categoryCode,
+            supplier: row['Dostawca'] || 'Nieznany',
+            description: row['Opis'] || '',
+            amount_net: parseFloat(row['Netto']) || 0,
+            vat_rate: 21, // Domyślnie 21%
+            vat_amount: parseFloat(row['VAT']) || 0,
+            amount_gross: parseFloat(row['Brutto']) || 0,
+            currency: 'EUR',
+            payment_method: 'bank_transfer',
+            is_vat_deductible: true,
+            is_business_expense: true,
+            invoice_number: row['Nr faktury'] || '',
+            notes: '',
+            attachments: [],
+          };
+
+          await createExpense(expenseData);
+          imported++;
+          
+        } catch (error) {
+          console.error(`Błąd w wierszu ${i}:`, error);
+          errors++;
+        }
+      }
+
+      if (imported > 0) {
+        toast.success(`✅ Zaimportowano ${imported} wydatków`);
+      }
+      if (errors > 0) {
+        toast.warning(`⚠️ Pominięto ${errors} wierszy z błędami`);
+      }
+
+      // Reset input
+      if (csvImportInputRef.current) {
+        csvImportInputRef.current.value = '';
+      }
+      
+    } catch (error) {
+      console.error('CSV import error:', error);
+      toast.error('❌ Błąd podczas importu CSV');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-blue-100">
       <div className="max-w-7xl mx-auto p-6 space-y-8">
@@ -1092,6 +1187,21 @@ export default function Expenses() {
                   <DownloadSimple className="mr-2" size={16} />
                   Eksport CSV
                 </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => csvImportInputRef.current?.click()}
+                  className="border-green-300 hover:bg-green-50 text-green-700"
+                >
+                  <Upload className="mr-2" size={16} />
+                  Import CSV
+                </Button>
+                <input
+                  ref={csvImportInputRef}
+                  type="file"
+                  accept=".csv"
+                  onChange={handleImportCSV}
+                  className="hidden"
+                />
               </div>
             </div>
           </CardHeader>
