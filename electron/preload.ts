@@ -69,6 +69,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getNetworkAddress: () => ipcRenderer.invoke('system:get-network-address'),
   copyToClipboard: (text: string) => ipcRenderer.invoke('system:copy-to-clipboard'),
 
+  // Print API
+  print: {
+    html: (html: string, options?: any) => ipcRenderer.invoke('print:html', html, options),
+    showDialog: (html: string) => ipcRenderer.invoke('print:show-dialog', html),
+  },
+
   // Menu Events
   onMenuAction: (callback: (action: string) => void) => {
     ipcRenderer.on('menu:new-invoice', () => callback('new-invoice'));
@@ -127,6 +133,10 @@ export interface ElectronAPI {
   };
   getNetworkAddress: () => Promise<string>;
   copyToClipboard: (text: string) => Promise<void>;
+  print: {
+    html: (html: string, options?: any) => Promise<{ success: boolean; message?: string }>;
+    showDialog: (html: string) => Promise<{ success: boolean; message?: string }>;
+  };
   onMenuAction: (callback: (action: string) => void) => () => void;
   isElectron: boolean;
   version: string;

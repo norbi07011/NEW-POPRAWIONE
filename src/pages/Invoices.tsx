@@ -340,18 +340,43 @@ UWAGA: Faktura została pobrana jako plik HTML/PDF. Proszę załączyć ją ręc
     try {
       console.log('🖨️ PRINT INVOICE START:', invoice.invoice_number);
       
-      // Wygeneruj HTML faktury używając tej samej funkcji co PDF
-      await generateInvoicePDF(invoice, company, client, invoice.lines, i18n.language, selectedTemplateId || 'classic');
+      // Sprawdź czy to Electron app
+      const isElectron = window.electronAPI?.isElectron;
       
-      // Metoda window.print() - kompatybilna z mobile i desktop
-      toast.loading('🖨️ Voorbereiden van afdrukvoorbeeld...', { duration: 1500 });
-      
-      setTimeout(() => {
-        window.print();
-        toast.success('✅ Afdrukvenster geopend', {
-          duration: 3000,
-        });
-      }, 1000);
+      if (isElectron && window.electronAPI?.print) {
+        // ELECTRON: Drukowanie bezpośrednie przez Electron API
+        toast.loading('🖨️ Wysyłam do drukarki...', { id: 'print-toast', duration: 2000 });
+        
+        // Wygeneruj HTML faktury
+        await generateInvoicePDF(invoice, company, client, invoice.lines, i18n.language, selectedTemplateId || 'classic');
+        
+        // Pobierz wygenerowany HTML z body
+        const printContent = document.body.innerHTML;
+        
+        // Wyślij do drukarki przez Electron API (silent print - bez dialogu)
+        const result = await window.electronAPI.print.html(printContent, { silent: true });
+        
+        if (result.success) {
+          toast.success('✅ Faktura została wysłana do drukarki!', {
+            id: 'print-toast',
+            duration: 3000,
+          });
+        } else {
+          toast.error(`❌ ${result.message || 'Błąd drukowania'}`, { id: 'print-toast' });
+        }
+      } else {
+        // BROWSER: Standardowe drukowanie przez window.print()
+        await generateInvoicePDF(invoice, company, client, invoice.lines, i18n.language, selectedTemplateId || 'classic');
+        
+        toast.loading('🖨️ Voorbereiden van afdrukvoorbeeld...', { duration: 1500 });
+        
+        setTimeout(() => {
+          window.print();
+          toast.success('✅ Afdrukvenster geopend', {
+            duration: 3000,
+          });
+        }, 1000);
+      }
       
     } catch (error: any) {
       const errorMsg = error?.message || 'Nieznany błąd';

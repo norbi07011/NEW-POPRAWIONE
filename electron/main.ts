@@ -405,6 +405,81 @@ ipcMain.handle('system:copy-to-clipboard', async (event, text) => {
   }
 });
 
+// Print: Print HTML content directly to printer
+ipcMain.handle('print:html', async (_event, html: string, options?: any) => {
+  try {
+    if (!mainWindow) {
+      throw new Error('Main window not available');
+    }
+
+    // Utwórz niewidoczne okno do drukowania
+    const printWindow = new BrowserWindow({
+      show: false,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+      },
+    });
+
+    // Załaduj HTML do okna
+    await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+
+    // Opcje drukowania
+    const printOptions = {
+      silent: options?.silent !== false, // Domyślnie drukuj bez dialogu
+      printBackground: true,
+      color: true,
+      margins: {
+        marginType: 'printableArea'
+      },
+      pageSize: 'A4',
+      ...options
+    };
+
+    // Drukuj
+    const success = await printWindow.webContents.print(printOptions);
+    
+    // Zamknij okno drukowania
+    printWindow.close();
+    
+    return { success, message: success ? 'Wydrukowano pomyślnie' : 'Anulowano drukowanie' };
+  } catch (error) {
+    console.error('Print error:', error);
+    return { success: false, message: `Błąd drukowania: ${error}` };
+  }
+});
+
+// Print: Show print dialog
+ipcMain.handle('print:show-dialog', async (_event, html: string) => {
+  try {
+    if (!mainWindow) {
+      throw new Error('Main window not available');
+    }
+
+    // Utwórz widoczne okno do podglądu wydruku
+    const printWindow = new BrowserWindow({
+      width: 800,
+      height: 600,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+      },
+      title: 'Podgląd wydruku',
+    });
+
+    // Załaduj HTML
+    await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+
+    // Pokaż dialog drukowania
+    printWindow.webContents.print({ silent: false, printBackground: true });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Print dialog error:', error);
+    return { success: false, message: `Błąd: ${error}` };
+  }
+});
+
 // Menu aplikacji
 function createMenu() {
   const template = [

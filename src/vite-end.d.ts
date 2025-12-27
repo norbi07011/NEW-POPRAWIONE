@@ -48,6 +48,10 @@ interface ElectronAPI {
     showSaveDialog: (options: any) => Promise<any>;
     showOpenDialog: (options: any) => Promise<any>;
   };
+  print: {
+    html: (html: string, options?: any) => Promise<{ success: boolean; message?: string }>;
+    showDialog: (html: string) => Promise<{ success: boolean; message?: string }>;
+  };
   build: {
     createInstaller: () => Promise<boolean>;
     openInstallerFolder: () => Promise<void>;
